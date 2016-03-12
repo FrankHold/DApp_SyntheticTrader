@@ -166,7 +166,7 @@ contract SyntheticTrader {
                          // reduce only a part the current order 
 
                          Buys[No_Buy_Orders].Collateral                -= Trade_Amount*Buys[No_Buy_Orders].Price;  // Collateral
-                         Trader[msg.sender].Funds                      += Trade_Amount*Buys[No_Buy_Orders].Price;  // Funds
+                         Funds[msg.sender]                             += Trade_Amount*Buys[No_Buy_Orders].Price;  // Funds
 
                          Amount[msg.sender]                            -= Trade_Amount;
                          Amount[Buys[No_Buy_Orders].Address]           += Trade_Amount;                            // Amount
@@ -182,9 +182,9 @@ contract SyntheticTrader {
                          Amount                                       -= Trade_Amount;
 
                          // close order
-                         Amount[No_Buy_Orders]                         = 0;
-                         Collateral[No_Buy_Orders]                     = 0;                                       // Collateral
-                         Address[No_Buy_Orders]                        = 0;
+                         Buys[No_Buy_Orders].Amount                    = 0;
+                         Buys[No_Buy_Orders].Collateral                = 0;                                       // Collateral
+                         Buys[No_Buy_Orders].Address                   = 0;
                          No_Buy_Orders --;
                       }
    }

@@ -19,7 +19,7 @@ contract SyntheticTrader {
        uint Amount;
        uint Price;
        uint Security;
-       uint Address;
+       address Address;
     }
     mapping (uint => Sell) public Sells;
     
@@ -28,7 +28,7 @@ contract SyntheticTrader {
        uint Amount;
        uint Price;
        uint Security;
-       uint Address;
+       address Address;
     }
     mapping (uint => Buy) public Buys;
 
@@ -178,7 +178,7 @@ contract SyntheticTrader {
                          Own_Funds[msg.sender]                        += Buys[No_Buy_Orders].Security;             // Funds
 
                          Own_Amount[msg.sender]                       -= Trade_Amount;
-                         Own_Amount[Buy[No_Buy_Orders].Address]       += Trade_Amount;                           // Amount
+                         Own_Amount[Buys[No_Buy_Orders].Address]       += Trade_Amount;                           // Amount
                          Amount                                       -= Trade_Amount;
 
                          // close order
@@ -255,7 +255,7 @@ contract SyntheticTrader {
 
 // -----------------------------------------------------------------------------------------------------
 
-   function BuyCash(uint Amount){
+   function BuyCash(uint Amount){// Error
                      uint Trade_Amount = 0;
 
                      uint Funds_Available = Own_Funds[msg.sender];
@@ -303,12 +303,12 @@ contract SyntheticTrader {
                          Own_Funds[msg.sender]                        += Sells[No_Sell_Orders].Security;         // Funds
 
                          Own_Amount[msg.sender]                       -= Trade_Amount;
-                         Own_Amount[Sell[No_Sell_Orders].Address]     += Trade_Amount;                           // Amount
+                         Own_Amount[Sells[No_Sell_Orders].Address]    += Trade_Amount;                           // Amount
                          Amount                                       -= Trade_Amount;
 
                          // close order
                          Sells[No_Sell_Orders].Amount                  = 0;
-                         Sells[No_Sell_Orders].Own_Security            = 0;                                     // Collateral
+                         Sells[No_Sell_Orders].Security                = 0;                                     // Collateral
                          Sells[No_Sell_Orders].Address                 = 0;
                          No_Sell_Orders --;
                       }

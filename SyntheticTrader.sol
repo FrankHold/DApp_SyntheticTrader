@@ -135,25 +135,25 @@ contract SyntheticTrader {
 
 // Maybe later
 
-     function Cancel_Buy_Order(uint Amount, uint Price_in_Wei, uint Order_Number) { // Cancle Buy order
+     function Cancel_Buy_Order(uint Amount, uint Price_in_Wei, uint Order_Number) internal { // Cancle Buy order
 
      }
 
-     function Cancel_Sell_Order(uint Amount, uint Price_in_Wei, uint Order_Number) { // Cancle Buy order
+     function Cancel_Sell_Order(uint Amount, uint Price_in_Wei, uint Order_Number) internal { // Cancle Buy order
 
      }
 
-     function Send_Stock(address Account,uint Amount) {
+     function Send_Stock(address Account,uint Amount) internal {
  
      }
 
-     function Show_10_transactions(){
+     function Show_10_transactions() internal {
         // buy/sell Price Amount address 
      }
 
 // subroutines
 
-   function SellCash(uint Amount){
+   function SellCash(uint Amount) internal {
                      uint Trade_Amount = Amount;
 
                      if (Amount > Own_Amount[msg.sender]){ // here only if he has it
@@ -189,7 +189,7 @@ contract SyntheticTrader {
                       }
    }
 
-   function SellDept(uint Amount){
+   function SellDept(uint Amount) internal {
 
                       // remaining on 'dept' but he has to provide a security (Amount>0 && Own_Amount[msg.sender]<=0)
 
@@ -232,7 +232,7 @@ contract SyntheticTrader {
    }
 
 
-   function SellOrder(uint Amount, uint Price_in_Wei){
+   function SellOrder(uint Amount, uint Price_in_Wei) internal {
       
       //put it on the right position in the sell list
       
@@ -255,7 +255,7 @@ contract SyntheticTrader {
 
 // -----------------------------------------------------------------------------------------------------
 
-   function BuyCash(uint Amount){// Error
+   function BuyCash(uint Amount) internal {
                      uint Trade_Amount = 0;
 
                      uint Funds_Available = Own_Funds[msg.sender];
@@ -314,7 +314,7 @@ contract SyntheticTrader {
                       }
    }
 
-   function BuyOrder(uint Amount, uint Price_in_Wei){
+   function BuyOrder(uint Amount, uint Price_in_Wei) internal {
       
       //put it on the right position in the sell list
       

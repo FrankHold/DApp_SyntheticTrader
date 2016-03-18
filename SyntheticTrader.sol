@@ -314,23 +314,25 @@ contract SyntheticTrader {
                       }
    }
 
-   function BuyOrder(uint Amount, uint Price_in_Wei) internal {
+    function BuyOrder(uint Amount, uint Price_in_Wei) internal {
       
-      //put it on the right position in the sell list
-      
-      for (uint i = No_Buy_Orders; i>0; i--){
-         if (Buys[i].Price >= Price_in_Wei || No_Buy_Orders == 0) {
-                         Buys[i+1].Amount                     = Amount;
-                         Buys[i+1].Security                   = Price_in_Wei*Amount/10^18;
-                         Own_Funds[msg.sender]               -= Price_in_Wei*Amount/10^18;
-                         Buys[i+1].Address                    = msg.sender;          
-                         i=0; // Exit  
-         }else{
-                         Buys[i+1].Amount                     = Buys[i].Amount;
-                         Buys[i+1].Security                   = Buys[i].Security;                                     // Collateral
-                         Buys[i+1].Address                    = Buys[i].Address;
-         }
-      }
-      No_Buy_Orders++;
-   } 
+        //put it on the right position in the sell list
+        // biggest buy price in the last position
+        No_Buy_Orders++;
+        for (uint i = No_Buy_Orders; i>0; i--){
+            if (Buys[i-1].Price < Price_in_Wei) {
+                        Buys[i].Price                      = Price_in_Wei;
+                        Buys[i].Amount                     = Amount;
+                        Buys[i].Security                   = Price_in_Wei*Amount/10^18;
+                        Own_Funds[msg.sender]             -= Price_in_Wei*Amount/10^18;
+                        Buys[i].Address                    = msg.sender;          
+                        i=0; // Exit  
+            }else{
+                        Buys[i].Price                      = Buys[i-1].Price;
+                        Buys[i].Amount                     = Buys[i-1].Amount;
+                        Buys[i].Security                   = Buys[i-1].Security;                                     // Collateral
+                        Buys[i].Address                    = Buys[i-1].Address;
+            }
+        }
+    } 
 }

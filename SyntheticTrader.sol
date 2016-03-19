@@ -232,25 +232,25 @@ contract SyntheticTrader {
    }
 
 
-   function SellOrder(uint Amount, uint Price_in_Wei) internal {
+    function SellOrder(uint Amount, uint Price_in_Wei) internal {
       
-      //put it on the right position in the sell list
-      
-      for (uint i = No_Sell_Orders; i>0; i--){
-         if (Sells[i].Price >= Price_in_Wei || No_Sell_Orders == 0) {
-                         Sells[i+1].Amount                      = Amount;
-                         Sells[i+1].Security                    = Price_in_Wei;                                    
-                         Sells[i+1].Address                     = msg.sender; 
-                         i=0; // Exit         
-
-         }else{
-                         Sells[i+1].Amount                      = Sells[i].Amount;
-                         Sells[i+1].Security                    = Sells[i].Security;           // Collateral
-                         Sells[i+1].Address                     = Sells[i].Address;
-         }
+        //put it on the right position in the sell list
+        No_Sell_Orders++;
+        for (uint i = No_Sell_Orders; i>0; i--){
+            if (Sells[i-1].Price >= Price_in_Wei || i == 1) {
+                        Sells[i].Price                       = Price_in_Wei; 
+                        Sells[i].Amount                      = Amount;
+                        Own_Amount[msg.sender]              -= Amount;
+                        Sells[i].Address                     = msg.sender; 
+                        i=0; // Exit         
+            }else{
+                        Sells[i].Price                       = Sells[i-1].Price;
+                        Sells[i].Amount                      = Sells[i-1].Amount;
+                        Sells[i].Address                     = Sells[i-1].Address;
+            }
       }
-      No_Sell_Orders++;
-   } 
+      
+    } 
 
 
 // -----------------------------------------------------------------------------------------------------

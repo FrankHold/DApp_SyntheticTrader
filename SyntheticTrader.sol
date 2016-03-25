@@ -16,18 +16,16 @@ contract SyntheticTrader {
     
     struct Sell
     {
-       uint Amount;
+       int Amount;
        uint Price;
-       uint Security;
        address Address;
     }
     mapping (uint => Sell) public Sells;
     
     struct Buy
     {
-       uint Amount;
+       int Amount;
        uint Price;
-       uint Security;
        address Address;
     }
     mapping (uint => Buy) public Buys;
@@ -93,7 +91,7 @@ contract SyntheticTrader {
 
      }
   
-     function Cancel_All_Orders() { // Cancle all orders
+     function Cancel_Order(uint Price_in_Wei) { // Cancle all orders
 
         // Sell Orders
         uint No_del = 0;

@@ -270,9 +270,43 @@ contract SyntheticTrader {
 // Create Order
 // ------------------------------------------------------------------------------
 
+    function Create_Sell_Order(int Amount, int Price) { // internal
+        
+        Sell_with_Funds(Amount, Ref_Price)
+        
+        If (Amount > 0 && Price > 0) {
+           Add_Sell_Order(Amount, Price)
+        }
+        Amount = 0
+    }
 
+    function Create_Buy_Order(int Amount, int Price) { // internal
+        
+        Buy_with_Funds(Amount, Price)
+        
+        If (Amount > 0 && Price > 0) {
+            Add_Buy_Order(Amount, Price)
+        }
+        Amount = 0
+    }
 
-
+    function Sell_with_Funds(int Amount, int Price){
+  
+        Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Price);
+        
+        If (Amount >= Own_Amount[msg.sender]){
+            
+            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Price
+            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Price
+            
+        }
+    }
+    
+    function Buy_with_Funds(int Amount, int Price){
+        Amount = min(Amount, Own_Funds[msg.sender] / Price)
+        Own_Funds[msg.sender] -= Amount * Price
+    }
+ 
 // ------------------------------------------------------------------------------
 // Cancel Order
 // ------------------------------------------------------------------------------

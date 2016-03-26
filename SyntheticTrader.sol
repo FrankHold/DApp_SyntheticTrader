@@ -91,67 +91,32 @@ contract SyntheticTrader {
         
     }
   
-     function Cancel_Order(uint Price_in_Wei) { // Cancle all orders
+    function Cancel_Order(uint Price_in_Wei) { // Cancle all orders
 
-        // Sell Orders
-        uint No_del = 0;
-        for (uint i = 1; i<No_Sell_Orders+1; i++){
-            if (Sells[i].Address == msg.sender) {
-                        Own_Funds[msg.sender]                 += Sells[i].Security; // ??? Coll is stored in Coll[sender] -> ERROR
-                        No_del++;        // Number of deleted sell orders 
-            }
-            if (No_del >0) {
-                        Sells[i].Amount                        = Sells[i+No_del].Amount;
-                        Sells[i].Security                      = Sells[i+No_del].Security;                 // Collateral
-                        Sells[i].Address                       = Sells[i+No_del].Address;
-            }
+        if (Price_in_Wei <= Buys[msg.sender){
+        
+            Cancel_Order_Buy(Price_in_Wei)
+        
         }
-        No_Sell_Orders=No_Sell_Orders - No_del;
-
-        // Buy Orders
-        No_del = 0;
-        for (i = 1; i<No_Buy_Orders+1; i++){
-            if (Buys[i].Address == msg.sender) {
-                        Own_Funds[msg.sender]                  = Buys[i].Security;
-                        No_del++;     // Number of deleted buy orders   
-            }
-            if (No_del >0) {
-                         Buys[i].Amount                         = Buys[i+No_del].Amount;
-                         Buys[i].Security                       = Buys[i+No_del].Security;               // Collateral
-                         Buys[i].Address                        = Buys[i+No_del].Address;
-            }
+    
+        if (Price_in_Wei >= Sells[msg.sender){
+        
+            Cancel_Order_Sell(Price_in_Wei)
+            
         }
-        No_Buy_Orders=No_Buy_Orders - No_del;
+    
+    }
 
-     }
-
-     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
+    function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
         msg.sender.send(Own_Funds[msg.sender]);
         Own_Funds[msg.sender]=0;
-     }
+    }
 
+// ------------------------------------------------------------------------------
+// internal routines
+// ------------------------------------------------------------------------------
 
-// Maybe later
-
-     function Cancel_Buy_Order(uint Amount, uint Price_in_Wei, uint Order_Number) internal { // Cancle Buy order
-
-     }
-
-     function Cancel_Sell_Order(uint Amount, uint Price_in_Wei, uint Order_Number) internal { // Cancle Buy order
-
-     }
-
-     function Send_Stock(address Account,uint Amount) internal {
- 
-     }
-
-     function Show_10_transactions() internal {
-        // buy/sell Price Amount address 
-     }
-
-// subroutines
-
-   function SellCash(uint Amount) internal {
+   function SellCash(uint Amount) { //  internal 
                      uint Trade_Amount = Amount;
 
                      if (Amount > Own_Amount[msg.sender]){ // here only if he has it
@@ -333,4 +298,61 @@ contract SyntheticTrader {
             }
         }
     } 
+}
+
+
+
+Cancel_Order_Buy
+
+
+// Sell Orders
+        uint No_del = 0;
+        for (uint i = 1; i<No_Sell_Orders+1; i++){
+            if (Sells[i].Address == msg.sender) {
+                        Own_Funds[msg.sender]                 += Sells[i].Security; // ??? Coll is stored in Coll[sender] -> ERROR
+                        No_del++;        // Number of deleted sell orders 
+            }
+            if (No_del >0) {
+                        Sells[i].Amount                        = Sells[i+No_del].Amount;
+                        Sells[i].Security                      = Sells[i+No_del].Security;                 // Collateral
+                        Sells[i].Address                       = Sells[i+No_del].Address;
+            }
+        }
+        No_Sell_Orders=No_Sell_Orders - No_del;
+
+        // Buy Orders
+        No_del = 0;
+        for (i = 1; i<No_Buy_Orders+1; i++){
+            if (Buys[i].Address == msg.sender) {
+                        Own_Funds[msg.sender]                  = Buys[i].Security;
+                        No_del++;     // Number of deleted buy orders   
+            }
+            if (No_del >0) {
+                         Buys[i].Amount                         = Buys[i+No_del].Amount;
+                         Buys[i].Security                       = Buys[i+No_del].Security;               // Collateral
+                         Buys[i].Address                        = Buys[i+No_del].Address;
+            }
+        }
+        No_Buy_Orders=No_Buy_Orders - No_del;
+        
+        
+        
+// ------------------------------------------------------------------------------
+// universal routines
+// ------------------------------------------------------------------------------
+
+function max(int A, int B) return (int ret) {
+    if (A>B) {
+        ret = A
+    } else {
+        ret = B
+    }
+}
+
+function min(int A, int B) return (int ret) {
+    if (A<B) {
+        ret = A
+    } else {
+        ret = B
+    }
 }

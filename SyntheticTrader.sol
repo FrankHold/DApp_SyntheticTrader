@@ -11,12 +11,12 @@ contract SyntheticTrader {
     uint256 No_Buy_Orders; // Max number of buy orders
 
     mapping (address => uint) public Own_Funds;       // Funds of the trader in Wei (access by Trader)
-    mapping (address => uint) public Own_Security;
-    mapping (address => uint) public Own_Amount;      // Amount on Stock in Stock*10^18 (access by Trader if > 0)
+    mapping (address => uint) public Own_Security;    // Security of the trader in Wei (no access)
+    mapping (address => int) public Own_Amount;      // Amount on Stock in Stock*10^18 (access by Trader if > 0)
     
     struct Sell
     {
-       int Amount;
+       uint Amount;
        uint Price;
        address Address;
     }
@@ -24,13 +24,13 @@ contract SyntheticTrader {
     
     struct Buy
     {
-       int Amount;
+       uint Amount;
        uint Price;
        address Address;
     }
     mapping (uint => Buy) public Buys;
 
-    string Error_Message; // Open ToDo
+    string FeedBack_Message; // Open ToDo
 
     uint Reference_Price_in_Wei;    // Each by / sell changes the reference price
                                     // Only used to determine the collateral 
@@ -48,27 +48,26 @@ contract SyntheticTrader {
 
     }
 
-    function Sell_Order(uint Amount, uint Price_in_Wei) { // Sell order
+    function Sell_Order(uint Amount_1e18, uint Price_in_Wei) { // Sell order
 
-            while (Amount > 0){
-                 if (Buys[No_Buy_Orders].Price >= Price_in_Wei) { // Sell if price is higher than ask
-                     // Sell
-                     if (Own_Amount[msg.sender]>0) {
-                        SellCash(Amount);
-                        Reference_Price_in_Wei = (Reference_Price_in_Wei * 99 + Buys[No_Buy_Orders].Price)/100;
-                     }
-                     if (Amount>0 && Own_Amount[msg.sender]<=0) {
-                        SellDept(Amount);
-                     }
+        while (Amount > 0){
+            if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
+                
+                if (Buys[No_Buy_Orders].Price >= Price_in_Wei) { // Sell if price is higher than ask
+                    // Sell
+                    
+                    Sell_from_List(Amount_1e18, Price_in_Wei)
+                    
                  } else {// to low in price 
-                                          
-                     // Create Sell order with the rest Amount
-                     if (Amount > 0 && Price_in_Wei > 0){
-                        SellOrder(Amount, Price_in_Wei);
-                     }
-                     Amount = 0;
-                 } 
-           } 
+                    // Create Sell order with the rest Amount
+                    
+                    Create_Sell_Order(Amount_1e18, Price_in_Wei);
+                    
+                 }
+            } else {
+                Amount = 0;
+            }
+        } 
       
      }
 

@@ -32,8 +32,8 @@ contract SyntheticTrader {
 
     string FeedBack_Message; // Open ToDo
 
-    uint Reference_Price_in_Wei;    // Each by / sell changes the reference price
-                                    // Only used to determine the collateral 
+    uint Reference_Price;   // Each by / sell changes the reference price
+                            // Only used to determine the collateral / security
 
     function SyntheticTrader() {
        // Initialization
@@ -58,12 +58,12 @@ contract SyntheticTrader {
                     
                     Sell_from_List(Amount_1e18, Price_in_Wei)
                     
-                 } else {// to low in price 
+                } else {// to low in price 
                     // Create Sell order with the rest Amount
                     
                     Create_Sell_Order(Amount_1e18, Price_in_Wei);
                     
-                 }
+                }
             } else {
                 Amount = 0;
             }
@@ -116,42 +116,39 @@ contract SyntheticTrader {
 // internal routines
 // ------------------------------------------------------------------------------
 
-   function SellCash(uint Amount) { //  internal 
-                     uint Trade_Amount = Amount;
+    function Sell_from_List(uint Amount) { //  internal 
+    
+        uint List_Amount = Buys[No_Buy_Orders].Amount;
+        uint List_Price  = Buys[No_Buy_Orders].Price;
+        
+        uint Transfer_Amount = min(Amount,List_Amount);
+        uint Sell_Amount = min(Transfer_Amount, max(Own_Amount[msg.sender],0));
 
-                     if (Amount > Own_Amount[msg.sender]){ // here only if he has it
-                        Trade_Amount = Own_Amount[msg.sender];
-                     }
-
-                     // How much is there
-
-                     if (Buys[No_Buy_Orders].Amount > Trade_Amount){
-                         // reduce only a part the current order 
-
-                         Buys[No_Buy_Orders].Security                  -= Trade_Amount*Buys[No_Buy_Orders].Price;  // Collateral
-                         Own_Funds[msg.sender]                         += Trade_Amount*Buys[No_Buy_Orders].Price;  // Funds
-
-                         Own_Amount[msg.sender]                        -= Trade_Amount;
-                         Own_Amount[Buys[No_Buy_Orders].Address]       += Trade_Amount;                            // Amount
-                         Amount                                        -= Trade_Amount;                         
-
-                     } else {
-                         // Close the current order
-                         Trade_Amount                                  = Buys[No_Buy_Orders].Amount;               // what is here
-                         Own_Funds[msg.sender]                        += Buys[No_Buy_Orders].Security;             // Funds
-
-                         Own_Amount[msg.sender]                       -= Trade_Amount;
-                         Own_Amount[Buys[No_Buy_Orders].Address]       += Trade_Amount;                           // Amount
-                         Amount                                       -= Trade_Amount;
-
-                         // close order
-                         Buys[No_Buy_Orders].Amount                    = 0;
-                         Buys[No_Buy_Orders].Security                  = 0;                                       // Collateral
-                         Buys[No_Buy_Orders].Address                   = 0;
-                         No_Buy_Orders --;
-                      }
+        // First sell the Amount the trader has and get the funds
+        Own_Funds[msg.sender] += Sell_Amount * List_Price
+        
+        // Then sell the remaining amount with funds as security
+        
+        uint Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds / Ref_Price)
+        
+        Own_Security[msg.sender] += Pay_Amount * List_Price
+        Own_Security[msg.sender] += Pay_Amount * Ref_Price
+        Own_Funds[msg.sender]    -= Pay_Amount * Ref_Price
+  
+        Amount                   -= Pay_Amount + Sell_Amount
+        Own_Amount[msg.sender]   -= Pay_Amount + Sell_Amount
+  
+        If (Pay_Amount + Sell_Amount) > 0 {
+            Ref_Price = (Ref_Price * 99 + List_Price) / 100
+        }
+  
+        Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount)
+        Sell_from_List_edit_List(Sell_Amount + Pay_Amount)
    }
-
+   
+   
+   
+// --------- here -------------
    function SellDept(uint Amount) internal {
 
                       // remaining on 'dept' but he has to provide a security (Amount>0 && Own_Amount[msg.sender]<=0)
@@ -337,22 +334,51 @@ Cancel_Order_Buy
         
         
         
+  Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount)
+  Sell_from_List_edit_List(Sell_Amount + Pay_Amount)       
+
+                    if (Amount > Own_Amount[msg.sender]){ // here only if he has it
+                        Trade_Amount = Own_Amount[msg.sender];
+                     }
+
+                     // How much is there
+
+                     if (Buys[No_Buy_Orders].Amount > Trade_Amount){
+                         // reduce only a part the current order 
+
+                         Buys[No_Buy_Orders].Security                  -= Trade_Amount*Buys[No_Buy_Orders].Price;  // Collateral
+                         Own_Funds[msg.sender]                         += Trade_Amount*Buys[No_Buy_Orders].Price;  // Funds
+
+                         Own_Amount[msg.sender]                        -= Trade_Amount;
+                         Own_Amount[Buys[No_Buy_Orders].Address]       += Trade_Amount;                            // Amount
+                         Amount                                        -= Trade_Amount;                         
+
+                     } else {
+                         // Close the current order
+                         Trade_Amount                                  = Buys[No_Buy_Orders].Amount;               // what is here
+                         Own_Funds[msg.sender]                        += Buys[No_Buy_Orders].Security;             // Funds
+
+                         Own_Amount[msg.sender]                       -= Trade_Amount;
+                         Own_Amount[Buys[No_Buy_Orders].Address]       += Trade_Amount;                           // Amount
+                         Amount                                       -= Trade_Amount;
+
+                         // close order
+                         Buys[No_Buy_Orders].Amount                    = 0;
+                         Buys[No_Buy_Orders].Security                  = 0;                                       // Collateral
+                         Buys[No_Buy_Orders].Address                   = 0;
+                         No_Buy_Orders --;
+                      }
+        
 // ------------------------------------------------------------------------------
 // universal routines
 // ------------------------------------------------------------------------------
+// https://github.com/ethereum/wiki/wiki/Solidity-Features
 
-function max(int A, int B) return (int ret) {
-    if (A>B) {
-        ret = A
-    } else {
-        ret = B
-    }
-}
-
-function min(int A, int B) return (int ret) {
-    if (A<B) {
-        ret = A
-    } else {
-        ret = B
-    }
-}
+  function max(int a, int b) returns (int) {
+    if (a > b) return a;
+    else return b;
+  }
+  function min(int a, int b) returns (int) {
+    if (a < b) return a;
+    else return b;
+  }

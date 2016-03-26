@@ -146,6 +146,57 @@ contract SyntheticTrader {
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount)
    }
    
+    function Buy_from_List(uint Amount) { //  internal 
+    
+        uint List_Amount = Sells[No_Sell_Orders].Amount;
+        uint List_Price  = Sells[No_Sell_Orders].Price;
+        
+        uint Transfer_Amount = min(Amount,List_Amount);
+        
+        if (Own_Amount[msg.sender] => 0) {
+            // trader buys only with funds // Own_Security = 0
+            
+            Max_Amount = Own_Funds[msg.sender] / List_Price;
+            
+        } else { // Own_Amount < 0  Security > 0
+
+            if (List_Price <= Own_Security / (-Own_Amount[msg.sender])){
+                // trader can buy with the security
+                Max_Amount = (Own_Security[msg.sender] + Own_Funds[msg.sender]) / List_Price;
+            }else{
+                // trader hase to add funds to relese his security
+                Max_Amount = Own_Funds[msg.sender] / (List_Price - Own_Security[msg.sender] / (-Own_Amount[msg.sender])) ;
+                Max_Amount = min(Max_Amount,-Own_Amount[msg.sender]);
+                uint rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] / (-Own_Amount[msg.sender]))*Max_Amount;
+                Max_Amount += rem_Funds / List_Price;
+            }
+        }
+        
+        if (Transfer_Amount >= Max_Amount){
+            // exit because end of funds
+            Transfer_Amount = Max_Amount;
+            Amount = 0;
+        }else{
+            Amount = Amount - Transfer_Amount;
+        }
+        
+        if (Own_Amount < 0) {
+            uint Free_Security = max(Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount), 1), 0);
+            Own_Funds[msg.sender]    += Free_Security;
+            Own_Security[msg.sender] -= Free_Security;
+        }
+        Own_Funds[msg.sender]  -=  Transfer_Amount * List_Price
+        Own_Amount[msg.sender] +=  Transfer_Amount
+        
+        If (Pay_Amount + Sell_Amount) > 0 {
+            Ref_Price = (Ref_Price * 99 + List_Price) / 100
+        }
+  
+        Buy_from_List_send_Seller(Transfer_Amount)
+        Buy_from_List_edit_List(Transfer_Amount)
+   }
+   
+   
    
    
 // --------- here -------------

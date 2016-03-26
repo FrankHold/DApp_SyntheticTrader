@@ -244,8 +244,8 @@ contract SyntheticTrader {
             Buys[No_Buy_Orders].Amount -= Transfer_Amount
         } else {
             // Close the order
-            Buys[No_Buy_Orders].Amount = 0
-            Buys[No_Buy_Orders].Price = 0
+            Buys[No_Buy_Orders].Amount  = 0
+            Buys[No_Buy_Orders].Price   = 0
             Buys[No_Buy_Orders].Address = 0
             No_Buy_Orders -= 1
         }
@@ -272,26 +272,6 @@ contract SyntheticTrader {
 
     function Create_Sell_Order(int Amount, int Price) { // internal
         
-        Sell_with_Funds(Amount, Ref_Price)
-        
-        If (Amount > 0 && Price > 0) {
-           Add_Sell_Order(Amount, Price)
-        }
-        Amount = 0
-    }
-
-    function Create_Buy_Order(int Amount, int Price) { // internal
-        
-        Buy_with_Funds(Amount, Price)
-        
-        If (Amount > 0 && Price > 0) {
-            Add_Buy_Order(Amount, Price)
-        }
-        Amount = 0
-    }
-
-    function Sell_with_Funds(int Amount, int Price){
-  
         Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Price);
         
         If (Amount >= Own_Amount[msg.sender]){
@@ -300,13 +280,66 @@ contract SyntheticTrader {
             Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Price
             
         }
+        
+        If (Amount > 0 && Price > 0) {
+           Add_Sell_Order(Amount, Price)
+        }
+        Amount = 0;
     }
-    
-    function Buy_with_Funds(int Amount, int Price){
+
+    function Create_Buy_Order(int Amount, int Price) { // internal
+        
         Amount = min(Amount, Own_Funds[msg.sender] / Price)
         Own_Funds[msg.sender] -= Amount * Price
+        
+        If (Amount > 0 && Price > 0) {
+            Add_Buy_Order(Amount, Price)
+        }
+        Amount = 0;
     }
- 
+
+    function Add_Sell_Order(int Amount, int Price){
+  
+        No_Sell_Orders = No_Sell_Orders + 1
+  
+        For (i = No_Sell_Orders,i>0,i--){
+
+            If (Sells[i-1].Price > Price || i = 1){
+   
+                Sells[i].Price      = Price
+                Sells[i].Amount     = Amount
+                Sells[i].Address    = msg.sender
+                i = 0
+                
+            }else{
+                Sells[i].Price      = Sells[i-1].Price
+                Sells[i].Amount     = Sells[i-1].Amount
+                Sells[i].Addresse   = Sells[i-1].Address
+            }
+        }
+    }
+
+    function Add_Buy_Order(int Amount, int Price){
+  
+        No_Buy_Orders = No_Buy_Orders + 1
+  
+        For (i = No_Buy_Orders,i>0,i--){
+
+            If (Buys[i-1].Price < Price || i = 1){
+   
+                Buys[i].Price      = Price
+                Buys[i].Amount     = Amount
+                Buys[i].Address    = msg.sender
+                i = 0
+                
+            }else{
+                Buys[i].Price      = Buys[i-1].Price
+                Buys[i].Amount     = Buys[i-1].Amount
+                Buys[i].Addresse   = Buys[i-1].Address
+            }
+        }
+    }
+
 // ------------------------------------------------------------------------------
 // Cancel Order
 // ------------------------------------------------------------------------------

@@ -95,13 +95,13 @@ contract SyntheticTrader {
 
         if (Price_in_Wei <= Buys[msg.sender){
         
-            Cancel_Order_Buy(Price_in_Wei)
+            Cancel_Buy_Order(Price_in_Wei)
         
         }
     
         if (Price_in_Wei >= Sells[msg.sender){
         
-            Cancel_Order_Sell(Price_in_Wei)
+            Cancel_Sell_Order(Price_in_Wei)
             
         }
     
@@ -344,7 +344,65 @@ contract SyntheticTrader {
 // Cancel Order
 // ------------------------------------------------------------------------------
         
+    function Cancle_Sell_Order(uint Price){
+ 
+        uint flag = 0;
         
+        For (i = 1, i < No_Sell_Orders, i++){
+        
+            If (Sells[i].Price = Price && msg.sender = Sells[i].Address  &&  flag = 0) {
+            
+                If (Own_Amount[msg.sender] < 0){
+                
+                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]), 1);
+                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]), 1);
+                
+                }
+            
+                Own_Amount[msg.sender] += List_Amount;
+            
+                flag = 1;
+            }
+    
+            If (flag = 1) {
+                Sells[i].Price      = Sells[i+1].Price;
+                Sells[i].Amount     = Sells[i+1].Amount;
+                Sells[i].Address    = Sells[i+1].Address;
+            }
+        }
+        
+        if (flag = 1){
+            No_Sell_Orders -= 1;
+        }
+        
+    }
+ 
+    function Cancle_Buy_Order(uint Price){
+        
+        uint flag = 0;
+        
+        For (i = 1, i < No_Buy_Orders, i++){
+            
+            If (Buys[i].Price = Price && msg.sender = Buys[i].Address  &&  flag = 0) {
+                
+                Own_Funds[msg.sender] += Buys[i].Price * Buys[i].Amount;
+                
+                flag = 1
+                
+            }
+            
+            If (flag = 1) {
+                Buys[i].Price      = Buys[i+1].Price;
+                Buys[i].Amount     = Buys[i+1].Amount;
+                Buys[i].Address    = Buys[i+1].Address;
+            }
+            
+        }
+        
+        if (flag = 1){
+            No_Buy_Orders -= 1;
+        }
+    }
         
         
 // ------------------------------------------------------------------------------

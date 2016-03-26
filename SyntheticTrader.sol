@@ -49,7 +49,7 @@ contract SyntheticTrader {
     }
 
     function Sell_Order(uint Amount_1e18, uint Price_in_Wei) { // Sell order
-
+        
         while (Amount > 0){
             if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
                 
@@ -69,26 +69,27 @@ contract SyntheticTrader {
             }
         } 
       
-     }
+    }
 
-     function Buy_Order(uint Amount, uint Price_in_Wei) { // New Buy order
-
-            while (Amount > 0){
-                if (Sells[No_Buy_Orders].Price <= Price_in_Wei) { // Buy if price is lower than ask
-                     // Buy
-                     BuyCash(Amount);
-                     Reference_Price_in_Wei = (Reference_Price_in_Wei * 99 + Sells[No_Sell_Orders].Price)/100;
+    function Buy_Order(uint Amount_1e18, uint Price_in_Wei) { // New Buy order
+        
+        while (Amount > 0){
+            if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
+                if (Sells[No_Sell_Orders].Price <= Price_in_Wei && No_Sell_Orders > 0) { // Buy if price is lower than ask
+                    // Buy
+                     
+                    Buy_from_List(Amount_1e18, Price_in_Wei);
+                     
                 } else {// to high in price
-                                          
-                     // Create Sell order with the rest Amount
-                     if (Amount > 0 && Price_in_Wei > 0){
-                        SellOrder(Amount, Price_in_Wei);
-                     }
-                     Amount = 0;
-                } 
+                    // Create Sell order with the rest Amount
+                    Create_Buy_Order(Amount_1e18, Price_in_Wei);
+                }
+            } else {
+                Amount = 0
             }
-
-     }
+        }
+        
+    }
   
      function Cancel_Order(uint Price_in_Wei) { // Cancle all orders
 

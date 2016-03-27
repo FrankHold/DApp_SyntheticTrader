@@ -6,6 +6,7 @@ contract SyntheticTrader {
     // 'Simple' list of open orders
     // Sorted by price in buy and sell orders
     
+    // Compiled with
     // https://chriseth.github.io/browser-solidity/
 
     int No_Sell_Orders; // Max number of sell orders
@@ -15,11 +16,11 @@ contract SyntheticTrader {
     int Ref_Price;      // Each by / sell changes the reference price
                         // Only used to determine the collateral / security
                         
-    int pU = 1e18;      // 1 Unit of Stock is 1/1e18 of a shear
+    int sU = 1e18;      // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
-    mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by Trader)
-    mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access)
-    mapping (address => int) public Own_Amount;      // Amount on Stock in Stock*10^18 (access by Trader if > 0)
+    mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by trader)
+    mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access by trader)
+    mapping (address => int) public Own_Amount;      // Amount on Stock in Stock/pU
     
     struct Sell
     {
@@ -52,9 +53,9 @@ contract SyntheticTrader {
 
     }
 
-    function Sell_Order(int Amount_1e18, int Price_in_Wei) { // Sell order
+    function Sell_Order(int Amount_in_sU, int Price_in_Wei) { // Sell order
         
-        Amount = Amount_1e18;
+        Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
         while (Amount > 0){
@@ -78,9 +79,9 @@ contract SyntheticTrader {
       
     }
 
-    function Buy_Order(int Amount_1e18, int Price_in_Wei) { // New Buy order
+    function Buy_Order(int Amount_in_sU, int Price_in_Wei) { // New Buy order
         
-        Amount = Amount_1e18;
+        Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
         while (Amount > 0){

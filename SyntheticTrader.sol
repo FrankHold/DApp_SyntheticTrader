@@ -104,13 +104,13 @@ contract SyntheticTrader {
         
         if (Price <= Buys[No_Buy_Orders].Price){
         
-            Cancel_Buy_Order(Price);
+            Cancel_Buy_Order();
         
         }
     
         if (Price >= Sells[No_Sell_Orders].Price){
         
-            Cancel_Sell_Order(Price);
+            Cancel_Sell_Order();
             
         }
     

@@ -44,7 +44,7 @@ contract SyntheticTrader {
 
     function () { // Send Ether to the contract
 
-      Own_Funds[msg.sender] += msg.value; // Add Funds in Wei
+      Own_Funds[msg.sender] += int(msg.value); // Add Funds in Wei
 
     }
 
@@ -108,7 +108,7 @@ contract SyntheticTrader {
     }
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
-        msg.sender.send(Own_Funds[msg.sender]);
+        msg.sender.send(uint(Own_Funds[msg.sender]));
         Own_Funds[msg.sender]=0;
     }
 
@@ -134,7 +134,7 @@ contract SyntheticTrader {
         
         // Then sell the remaining amount with funds as security
         
-        int Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds / Ref_Price);
+        int Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds[msg.sender] / Ref_Price);
         
         Own_Security[msg.sender] += Pay_Amount * List_Price;
         Own_Security[msg.sender] += Pay_Amount * Ref_Price;
@@ -143,7 +143,7 @@ contract SyntheticTrader {
         Amount                   -= Pay_Amount + Sell_Amount;
         Own_Amount[msg.sender]   -= Pay_Amount + Sell_Amount;
   
-        If (Pay_Amount + Sell_Amount > 0) {
+        if (Pay_Amount + Sell_Amount > 0) {
             Ref_Price = (Ref_Price * 99 + List_Price) / 100;
         }
   
@@ -155,6 +155,7 @@ contract SyntheticTrader {
     
         int List_Amount = Sells[No_Sell_Orders].Amount;
         int List_Price  = Sells[No_Sell_Orders].Price;
+        int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
         
@@ -165,7 +166,7 @@ contract SyntheticTrader {
             
         } else { // Own_Amount < 0  Security > 0
 
-            if (List_Price <= Own_Security / (-Own_Amount[msg.sender])){
+            if (List_Price <= Own_Security[msg.sender] / (-Own_Amount[msg.sender])){
                 // trader can buy with the security
                 Max_Amount = (Own_Security[msg.sender] + Own_Funds[msg.sender]) / List_Price;
             }else{
@@ -185,8 +186,8 @@ contract SyntheticTrader {
             Amount = Amount - Transfer_Amount;
         }
         
-        if (Own_Amount < 0) {
-            int Free_Security = max(Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount), 1), 0);
+        if (Own_Amount[msg.sender] < 0) {
+            int Free_Security = max(Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount[msg.sender]), 1), 0);
             Own_Funds[msg.sender]    += Free_Security;
             Own_Security[msg.sender] -= Free_Security;
         }
@@ -315,7 +316,7 @@ contract SyntheticTrader {
             }else{
                 Sells[i].Price      = Sells[i-1].Price;
                 Sells[i].Amount     = Sells[i-1].Amount;
-                Sells[i].Addresse   = Sells[i-1].Address;
+                Sells[i].Address    = Sells[i-1].Address;
             }
         }
     }
@@ -336,7 +337,7 @@ contract SyntheticTrader {
             }else{
                 Buys[i].Price      = Buys[i-1].Price;
                 Buys[i].Amount     = Buys[i-1].Amount;
-                Buys[i].Addresse   = Buys[i-1].Address;
+                Buys[i].Address    = Buys[i-1].Address;
             }
         }
     }

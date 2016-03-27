@@ -3,9 +3,10 @@ contract SyntheticTrader {
 
     // Work in process - EEEERRRROOORRRSSS
 
-    // 1 Unit of Stock is 1/1e18 of a shear
-    // Simple list of open orders
-    // Sorted by price
+    // 'Simple' list of open orders
+    // Sorted by price in buy and sell orders
+    
+    // https://chriseth.github.io/browser-solidity/
 
     int No_Sell_Orders; // Max number of sell orders
     int No_Buy_Orders;  // Max number of buy orders
@@ -13,6 +14,8 @@ contract SyntheticTrader {
     int Price;          // Price of the stock to be traded
     int Ref_Price;      // Each by / sell changes the reference price
                         // Only used to determine the collateral / security
+                        
+    int pU = 1e18;      // 1 Unit of Stock is 1/1e18 of a shear
 
     mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by Trader)
     mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access)

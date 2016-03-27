@@ -9,14 +9,14 @@ contract SyntheticTrader {
     // Compiled with
     // https://chriseth.github.io/browser-solidity/
 
-    int No_Sell_Orders; // Max number of sell orders
-    int No_Buy_Orders;  // Max number of buy orders
-    int Amount;         // Amount of stock to be traded
-    int Price;          // Price of the stock to be traded
-    int Ref_Price;      // Each by / sell changes the reference price
-                        // Only used to determine the collateral / security
+    int public No_Sell_Orders; // Max number of sell orders
+    int public No_Buy_Orders;  // Max number of buy orders
+    int public Amount;         // Amount of stock to be traded
+    int public Price;          // Price of the stock to be traded
+    int public Ref_Price;      // Each by / sell changes the reference price
+                               // Only used to determine the collateral / security
                         
-    int sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
+    int public sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
     mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by trader)
     mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access by trader)

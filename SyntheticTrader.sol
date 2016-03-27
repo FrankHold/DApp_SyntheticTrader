@@ -8,7 +8,11 @@ contract SyntheticTrader {
     // Sorted by price
 
     int No_Sell_Orders; // Max number of sell orders
-    int No_Buy_Orders; // Max number of buy orders
+    int No_Buy_Orders;  // Max number of buy orders
+    int Amount;         // Amount of stock to be traded
+    int Price;          // Price of the stock to be traded
+    int Ref_Price;      // Each by / sell changes the reference price
+                        // Only used to determine the collateral / security
 
     mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by Trader)
     mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access)
@@ -32,9 +36,6 @@ contract SyntheticTrader {
 
     string FeedBack_Message; // Open ToDo
 
-    int Ref_Price;         // Each by / sell changes the reference price
-                            // Only used to determine the collateral / security
-
     function SyntheticTrader() {
        // Initialization
        No_Sell_Orders = 0;                 // Start without orders
@@ -50,22 +51,25 @@ contract SyntheticTrader {
 
     function Sell_Order(int Amount_1e18, int Price_in_Wei) { // Sell order
         
-        while (Amount_1e18 > 0){
+        Amount = Amount_1e18;
+        Price  = Price_in_Wei;
+        
+        while (Amount > 0){
             if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
                 
-                if (Buys[No_Buy_Orders].Price >= Price_in_Wei) { // Sell if price is higher than ask
+                if (Buys[No_Buy_Orders].Price >= Price) { // Sell if price is higher than ask
                     // Sell
                     
-                    Sell_from_List(Amount_1e18);
+                    Sell_from_List();
                     
                 } else {// to low in price 
                     // Create Sell order with the rest Amount
                     
-                    Create_Sell_Order(Amount_1e18, Price_in_Wei);
+                    Create_Sell_Order();
                     
                 }
             } else {
-                Amount_1e18 = 0;
+                Amount = 0;
             }
         } 
       
@@ -73,35 +77,40 @@ contract SyntheticTrader {
 
     function Buy_Order(int Amount_1e18, int Price_in_Wei) { // New Buy order
         
-        while (Amount_1e18 > 0){
+        Amount = Amount_1e18;
+        Price  = Price_in_Wei;
+        
+        while (Amount > 0){
             if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
-                if (Sells[No_Sell_Orders].Price <= Price_in_Wei && No_Sell_Orders > 0) { // Buy if price is lower than ask
+                if (Sells[No_Sell_Orders].Price <= Price && No_Sell_Orders > 0) { // Buy if price is lower than ask
                     // Buy
                      
-                    Buy_from_List(Amount_1e18);
+                    Buy_from_List();
                      
                 } else {// to high in price
                     // Create Sell order with the rest Amount
-                    Create_Buy_Order(Amount_1e18, Price_in_Wei);
+                    Create_Buy_Order();
                 }
             } else {
-                Amount_1e18 = 0;
+                Amount = 0;
             }
         }
         
     }
   
     function Cancel_Order(int Price_in_Wei) { // Cancle all orders
-
-        if (Price_in_Wei <= Buys[No_Buy_Orders].Price){
         
-            Cancel_Buy_Order(Price_in_Wei);
+        Price  = Price_in_Wei;
+        
+        if (Price <= Buys[No_Buy_Orders].Price){
+        
+            Cancel_Buy_Order(Price);
         
         }
     
-        if (Price_in_Wei >= Sells[No_Sell_Orders].Price){
+        if (Price >= Sells[No_Sell_Orders].Price){
         
-            Cancel_Sell_Order(Price_in_Wei);
+            Cancel_Sell_Order(Price);
             
         }
     
@@ -122,7 +131,7 @@ contract SyntheticTrader {
 // Buy / Sell from List
 // ------------------------------------------------------------------------------
 
-    function Sell_from_List(int Amount) { //  internal 
+    function Sell_from_List() { //  internal 
     
         int List_Amount = Buys[No_Buy_Orders].Amount;
         int List_Price  = Buys[No_Buy_Orders].Price;
@@ -153,7 +162,7 @@ contract SyntheticTrader {
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
    }
    
-    function Buy_from_List(int Amount) { //  internal 
+    function Buy_from_List() { //  internal 
     
         int List_Amount = Sells[No_Sell_Orders].Amount;
         int List_Price  = Sells[No_Sell_Orders].Price;
@@ -274,35 +283,35 @@ contract SyntheticTrader {
 // Create Order
 // ------------------------------------------------------------------------------
 
-    function Create_Sell_Order(int Amount, int Price) { // internal
+    function Create_Sell_Order() { // internal
         
-        Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Price);
+        Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Ref_Price);
         
         if (Amount >= Own_Amount[msg.sender]){
             
-            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Price;
-            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Price;
+            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price;
+            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price;
             
         }
         
         if (Amount > 0 && Price > 0) {
-           Add_Sell_Order(Amount, Price);
+           Add_Sell_Order();
         }
         Amount = 0;
     }
 
-    function Create_Buy_Order(int Amount, int Price) { // internal
+    function Create_Buy_Order() { // internal
         
         Amount = min(Amount, Own_Funds[msg.sender] / Price);
         Own_Funds[msg.sender] -= Amount * Price;
         
         if (Amount > 0 && Price > 0) {
-            Add_Buy_Order(Amount, Price);
+            Add_Buy_Order();
         }
         Amount = 0;
     }
 
-    function Add_Sell_Order(int Amount, int Price){
+    function Add_Sell_Order(){
   
         No_Sell_Orders += 1;
   
@@ -323,7 +332,7 @@ contract SyntheticTrader {
         }
     }
 
-    function Add_Buy_Order(int Amount, int Price){
+    function Add_Buy_Order(){
   
         No_Buy_Orders += 1;
   
@@ -348,7 +357,7 @@ contract SyntheticTrader {
 // Cancel Order
 // ------------------------------------------------------------------------------
         
-    function Cancel_Sell_Order(int Price){
+    function Cancel_Sell_Order(){
  
         int flag = 0;
         
@@ -381,7 +390,7 @@ contract SyntheticTrader {
         
     }
  
-    function Cancel_Buy_Order(int Price){
+    function Cancel_Buy_Order(){
         
         int flag = 0;
         

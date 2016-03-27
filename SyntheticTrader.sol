@@ -108,8 +108,10 @@ contract SyntheticTrader {
     }
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
-        msg.sender.send(uint(Own_Funds[msg.sender]));
-        Own_Funds[msg.sender]=0;
+        if (Own_Funds[msg.sender]>0){
+            msg.sender.send(uint(Own_Funds[msg.sender]));
+            Own_Funds[msg.sender]=0;
+        }
     }
 
 // ------------------------------------------------------------------------------

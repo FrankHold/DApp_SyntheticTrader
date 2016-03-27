@@ -12,7 +12,7 @@ contract SyntheticTrader {
 
     mapping (address => uint) public Own_Funds;       // Funds of the trader in Wei (access by Trader)
     mapping (address => uint) public Own_Security;    // Security of the trader in Wei (no access)
-    mapping (address => int) public Own_Amount;      // Amount on Stock in Stock*10^18 (access by Trader if > 0)
+    mapping (address =>  int) public Own_Amount;      // Amount on Stock in Stock*10^18 (access by Trader if > 0)
     
     struct Sell
     {
@@ -56,7 +56,7 @@ contract SyntheticTrader {
                 if (Buys[No_Buy_Orders].Price >= Price_in_Wei) { // Sell if price is higher than ask
                     // Sell
                     
-                    Sell_from_List(Amount_1e18, Price_in_Wei)
+                    Sell_from_List(Amount_1e18, Price_in_Wei);
                     
                 } else {// to low in price 
                     // Create Sell order with the rest Amount
@@ -85,7 +85,7 @@ contract SyntheticTrader {
                     Create_Buy_Order(Amount_1e18, Price_in_Wei);
                 }
             } else {
-                Amount = 0
+                Amount = 0;
             }
         }
         
@@ -95,13 +95,13 @@ contract SyntheticTrader {
 
         if (Price_in_Wei <= Buys[msg.sender){
         
-            Cancel_Buy_Order(Price_in_Wei)
+            Cancel_Buy_Order(Price_in_Wei);
         
         }
     
         if (Price_in_Wei >= Sells[msg.sender){
         
-            Cancel_Sell_Order(Price_in_Wei)
+            Cancel_Sell_Order(Price_in_Wei);
             
         }
     
@@ -129,25 +129,25 @@ contract SyntheticTrader {
         uint Sell_Amount = min(Transfer_Amount, max(Own_Amount[msg.sender],0));
 
         // First sell the Amount the trader has and get the funds
-        Own_Funds[msg.sender] += Sell_Amount * List_Price
+        Own_Funds[msg.sender] += Sell_Amount * List_Price;
         
         // Then sell the remaining amount with funds as security
         
-        uint Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds / Ref_Price)
+        uint Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds / Ref_Price);
         
-        Own_Security[msg.sender] += Pay_Amount * List_Price
-        Own_Security[msg.sender] += Pay_Amount * Ref_Price
-        Own_Funds[msg.sender]    -= Pay_Amount * Ref_Price
+        Own_Security[msg.sender] += Pay_Amount * List_Price;
+        Own_Security[msg.sender] += Pay_Amount * Ref_Price;
+        Own_Funds[msg.sender]    -= Pay_Amount * Ref_Price;
   
-        Amount                   -= Pay_Amount + Sell_Amount
-        Own_Amount[msg.sender]   -= Pay_Amount + Sell_Amount
+        Amount                   -= Pay_Amount + Sell_Amount;
+        Own_Amount[msg.sender]   -= Pay_Amount + Sell_Amount;
   
         If (Pay_Amount + Sell_Amount) > 0 {
-            Ref_Price = (Ref_Price * 99 + List_Price) / 100
+            Ref_Price = (Ref_Price * 99 + List_Price) / 100;
         }
   
-        Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount)
-        Sell_from_List_edit_List(Sell_Amount + Pay_Amount)
+        Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount);
+        Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
    }
    
     function Buy_from_List(uint Amount) { //  internal 
@@ -189,15 +189,15 @@ contract SyntheticTrader {
             Own_Funds[msg.sender]    += Free_Security;
             Own_Security[msg.sender] -= Free_Security;
         }
-        Own_Funds[msg.sender]  -=  Transfer_Amount * List_Price
-        Own_Amount[msg.sender] +=  Transfer_Amount
+        Own_Funds[msg.sender]  -=  Transfer_Amount * List_Price;
+        Own_Amount[msg.sender] +=  Transfer_Amount;
         
         If (Pay_Amount + Sell_Amount) > 0 {
-            Ref_Price = (Ref_Price * 99 + List_Price) / 100
+            Ref_Price = (Ref_Price * 99 + List_Price) / 100;
         }
   
-        Buy_from_List_send_Seller(Transfer_Amount)
-        Buy_from_List_edit_List(Transfer_Amount)
+        Buy_from_List_send_Seller(Transfer_Amount);
+        Buy_from_List_edit_List(Transfer_Amount);
     }
   
     function Sell_from_List_send_Buyer(uint Transfer_Amount) { // Internal
@@ -206,8 +206,8 @@ contract SyntheticTrader {
         
         If (Own_Amount[List_msg_sender] + Transfer_Amount > 0) {
             
-            Own_Funds[List_msg_sender]   += Own_Security[List_msg_sender]
-            Own_Security[List_msg_sender] = 0
+            Own_Funds[List_msg_sender]   += Own_Security[List_msg_sender];
+            Own_Security[List_msg_sender] = 0;
             
         } else { // List_Own_Amount + Transfer_Amount =< 0
             
@@ -216,7 +216,7 @@ contract SyntheticTrader {
             Own_Security[List_msg_sender] -= Free_Security;
         }
         
-        Own_Amount[List_msg_sender] += Transfer_Amount
+        Own_Amount[List_msg_sender] += Transfer_Amount;
         
     }
 
@@ -241,28 +241,28 @@ contract SyntheticTrader {
         If (Transfer_Amount < Buys[No_Buy_Orders].Amount) {
             // If some more available
             // Don't close the List entry
-            Buys[No_Buy_Orders].Amount -= Transfer_Amount
+            Buys[No_Buy_Orders].Amount -= Transfer_Amount;
         } else {
             // Close the order
-            Buys[No_Buy_Orders].Amount  = 0
-            Buys[No_Buy_Orders].Price   = 0
-            Buys[No_Buy_Orders].Address = 0
-            No_Buy_Orders -= 1
+            Buys[No_Buy_Orders].Amount  = 0;
+            Buys[No_Buy_Orders].Price   = 0;
+            Buys[No_Buy_Orders].Address = 0;
+            No_Buy_Orders -= 1;
         }
     }
 
     function Buy_from_List_edit_List(uint Transfer_Amount) { // Internal
         
         If (Transfer_Amount < Sells[No_Sell_Orders].Amount) {
-            // If some more available
-            // Don't close the List entry
-            Sells[No_Sell_Orders].Amount -= Transfer_Amount
+            // If some more is available
+            // Don't close the list entry
+            Sells[No_Sell_Orders].Amount -= Transfer_Amount;
         } else {
             // Close the order
-            Sells[No_Sell_Orders].Amount = 0
-            Sells[No_Sell_Orders].Price = 0
-            Sells[No_Sell_Orders].Address = 0
-            No_Sell_Orders -= 1
+            Sells[No_Sell_Orders].Amount  = 0;
+            Sells[No_Sell_Orders].Price   = 0;
+            Sells[No_Sell_Orders].Address = 0;
+            No_Sell_Orders -= 1;
         }
     }
     
@@ -276,66 +276,66 @@ contract SyntheticTrader {
         
         If (Amount >= Own_Amount[msg.sender]){
             
-            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Price
-            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Price
+            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Price;
+            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Price;
             
         }
         
         If (Amount > 0 && Price > 0) {
-           Add_Sell_Order(Amount, Price)
+           Add_Sell_Order(Amount, Price);
         }
         Amount = 0;
     }
 
     function Create_Buy_Order(int Amount, int Price) { // internal
         
-        Amount = min(Amount, Own_Funds[msg.sender] / Price)
-        Own_Funds[msg.sender] -= Amount * Price
+        Amount = min(Amount, Own_Funds[msg.sender] / Price);
+        Own_Funds[msg.sender] -= Amount * Price;
         
         If (Amount > 0 && Price > 0) {
-            Add_Buy_Order(Amount, Price)
+            Add_Buy_Order(Amount, Price);
         }
         Amount = 0;
     }
 
     function Add_Sell_Order(int Amount, int Price){
   
-        No_Sell_Orders = No_Sell_Orders + 1
+        No_Sell_Orders += 1;
   
-        For (i = No_Sell_Orders,i>0,i--){
+        For (i = No_Sell_Orders;i>0;i--){
 
-            If (Sells[i-1].Price > Price || i = 1){
+            If (Sells[i-1].Price > Price || i == 1){
    
-                Sells[i].Price      = Price
-                Sells[i].Amount     = Amount
-                Sells[i].Address    = msg.sender
-                i = 0
+                Sells[i].Price      = Price;
+                Sells[i].Amount     = Amount;
+                Sells[i].Address    = msg.sender;
+                i = 0;
                 
             }else{
-                Sells[i].Price      = Sells[i-1].Price
-                Sells[i].Amount     = Sells[i-1].Amount
-                Sells[i].Addresse   = Sells[i-1].Address
+                Sells[i].Price      = Sells[i-1].Price;
+                Sells[i].Amount     = Sells[i-1].Amount;
+                Sells[i].Addresse   = Sells[i-1].Address;
             }
         }
     }
 
     function Add_Buy_Order(int Amount, int Price){
   
-        No_Buy_Orders = No_Buy_Orders + 1
+        No_Buy_Orders += 1;
   
-        For (i = No_Buy_Orders,i>0,i--){
+        For (i = No_Buy_Orders;i>0;i--){
 
-            If (Buys[i-1].Price < Price || i = 1){
+            If (Buys[i-1].Price < Price || i == 1){
    
-                Buys[i].Price      = Price
-                Buys[i].Amount     = Amount
-                Buys[i].Address    = msg.sender
-                i = 0
+                Buys[i].Price      = Price;
+                Buys[i].Amount     = Amount;
+                Buys[i].Address    = msg.sender;
+                i = 0;
                 
             }else{
-                Buys[i].Price      = Buys[i-1].Price
-                Buys[i].Amount     = Buys[i-1].Amount
-                Buys[i].Addresse   = Buys[i-1].Address
+                Buys[i].Price      = Buys[i-1].Price;
+                Buys[i].Amount     = Buys[i-1].Amount;
+                Buys[i].Addresse   = Buys[i-1].Address;
             }
         }
     }
@@ -348,9 +348,9 @@ contract SyntheticTrader {
  
         uint flag = 0;
         
-        For (i = 1, i < No_Sell_Orders, i++){
+        For (i = 1; i < No_Sell_Orders; i++){
         
-            If (Sells[i].Price = Price && msg.sender = Sells[i].Address  &&  flag = 0) {
+            If (Sells[i].Price == Price && msg.sender == Sells[i].Address  &&  flag == 0) {
             
                 If (Own_Amount[msg.sender] < 0){
                 
@@ -364,14 +364,14 @@ contract SyntheticTrader {
                 flag = 1;
             }
     
-            If (flag = 1) {
+            If (flag == 1) {
                 Sells[i].Price      = Sells[i+1].Price;
                 Sells[i].Amount     = Sells[i+1].Amount;
                 Sells[i].Address    = Sells[i+1].Address;
             }
         }
         
-        if (flag = 1){
+        if (flag == 1){
             No_Sell_Orders -= 1;
         }
         
@@ -381,13 +381,13 @@ contract SyntheticTrader {
         
         uint flag = 0;
         
-        For (i = 1, i < No_Buy_Orders, i++){
+        For (i = 1; i < No_Buy_Orders; i++){
             
-            If (Buys[i].Price = Price && msg.sender = Buys[i].Address  &&  flag = 0) {
+            If (Buys[i].Price == Price && msg.sender == Buys[i].Address  &&  flag == 0) {
                 
                 Own_Funds[msg.sender] += Buys[i].Price * Buys[i].Amount;
                 
-                flag = 1
+                flag = 1;
                 
             }
             
@@ -399,7 +399,7 @@ contract SyntheticTrader {
             
         }
         
-        if (flag = 1){
+        if (flag == 1){
             No_Buy_Orders -= 1;
         }
     }

@@ -16,7 +16,7 @@ contract SyntheticTrader {
     int Ref_Price;      // Each by / sell changes the reference price
                         // Only used to determine the collateral / security
                         
-    int sU = 1e18;      // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
+    int sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
     mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by trader)
     mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access by trader)

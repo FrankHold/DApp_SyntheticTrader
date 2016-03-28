@@ -6,8 +6,9 @@ contract SyntheticTrader {
     // 'Simple' list of open orders
     // Sorted by price in buy and sell orders
     
-    // Compiled with
+    // Links
     // https://chriseth.github.io/browser-solidity/
+    // http://solidity.readthedocs.org/en/latest/
 
     int public No_Sell_Orders; // Max number of sell orders
     int public No_Buy_Orders;  // Max number of buy orders
@@ -18,9 +19,12 @@ contract SyntheticTrader {
                         
     int public sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
-    mapping (address => int) public Own_Funds;       // Funds of the trader in Wei (access by trader)
-    mapping (address => int) public Own_Security;    // Security of the trader in Wei (no access by trader)
-    mapping (address => int) public Own_Amount;      // Amount on Stock in Stock/pU
+    mapping (address => int) public Own_Funds;      // Funds of the trader in Wei (access by trader)
+    mapping (address => int) public Own_Security;   // Security of the trader in Wei (no access by trader)
+    mapping (address => int) public Own_Amount;     // Amount on Stock in Stock/pU
+    mapping (address => int) public Own_FeedBack;   // For debugging
+    mapping (address => int) public Own_FB_Exit;    // For debugging
+
     
     struct Sell
     {
@@ -38,13 +42,11 @@ contract SyntheticTrader {
     }
     mapping (int => Buy) public Buys;
 
-    string FeedBack_Message; // Open ToDo
-
     function SyntheticTrader() {
        // Initialization
-       No_Sell_Orders = 0;                 // Start without orders
+       No_Sell_Orders = 0;                  // Start without orders
        No_Buy_Orders  = 0;
-       Ref_Price      = 25*sU;          // Reference Price in Wei
+       Ref_Price      = 1*sU;               // Reference Price in Wei
     }
 
     function () { // Send Ether to the contract
@@ -58,7 +60,9 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        while (Amount > 0){
+        Own_FeedBack[msg.sender] =100000; // 1xx xxx = Sell_Order
+        
+        while (Amount > 0 && Price > 0){
             if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
                 
                 if (Buys[No_Buy_Orders].Price >= Price) { // Sell if price is higher than ask
@@ -84,7 +88,9 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        while (Amount > 0){
+        Own_FeedBack[msg.sender] =200000; // 2xx xxx = Buy_Order
+        
+        while (Amount > 0 && Price > 0){
             if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
                 if (Sells[No_Sell_Orders].Price <= Price && No_Sell_Orders > 0) { // Buy if price is lower than ask
                     // Buy
@@ -104,6 +110,8 @@ contract SyntheticTrader {
   
     function Cancel_Order(int Price_in_Wei) { // Cancle all orders
         
+        Own_FeedBack[msg.sender] =300000; // 3xx xxx = Cancel_Order
+        
         Price  = Price_in_Wei;
         
         if (Price <= Buys[No_Buy_Orders].Price){
@@ -121,9 +129,13 @@ contract SyntheticTrader {
     }
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
+    
+        Own_FeedBack[msg.sender] =400000; // 4xx xxx = Withdraw_All_Funds
+    
         if (Own_Funds[msg.sender]>0){
             msg.sender.send(uint(Own_Funds[msg.sender]));
             Own_Funds[msg.sender]=0;
+            Own_FeedBack[msg.sender] +=010000; // 01x xxx = Send funds
         }
     }
 
@@ -144,6 +156,8 @@ contract SyntheticTrader {
         int Transfer_Amount = min(Amount,List_Amount);
         int Sell_Amount = min(Transfer_Amount, max(Own_Amount[msg.sender],0));
 
+        Own_FeedBack[msg.sender] +=010000; // x1x xxx = Sell_from_List
+
         // First sell the Amount the trader has and get the funds
         Own_Funds[msg.sender] += Sell_Amount * List_Price / sU;
         
@@ -162,6 +176,16 @@ contract SyntheticTrader {
             Ref_Price = (Ref_Price * 99 + List_Price) / 100;
         }
   
+        if (Amount <= 0){
+            Own_FB_Exit[msg.sender] = 110000; // Exit Sell_from_List
+            if (Pay_Amount > 0) {
+             Own_FB_Exit[msg.sender] += 1; // Sell with Funds
+            }
+            if (Sell_Amount > 0) {
+             Own_FB_Exit[msg.sender] += 2; // Sell with Amount
+            }
+        }
+  
         Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount);
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
    }
@@ -173,6 +197,8 @@ contract SyntheticTrader {
         int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
+        
+        Own_FeedBack[msg.sender] +=020000; // x2x xxx = Buy_from_List
         
         if (Own_Amount[msg.sender] >= 0) {
             // trader buys only with funds // Own_Security = 0
@@ -197,6 +223,7 @@ contract SyntheticTrader {
             // exit because end of funds
             Transfer_Amount = Max_Amount;
             Amount = 0;
+            Own_FB_Exit[msg.sender] = 210000; // End of Funds
         }else{
             Amount = Amount - Transfer_Amount;
         }
@@ -221,6 +248,8 @@ contract SyntheticTrader {
         
         address List_msg_sender = Buys[No_Buy_Orders].Address;
         
+        Own_FeedBack[msg.sender] +=001000; // xx1 xxx = Sell_from_List_send_Buyer
+        
         if (Own_Amount[List_msg_sender] + Transfer_Amount > 0) {
             
             Own_Funds[List_msg_sender]   += Own_Security[List_msg_sender];
@@ -241,6 +270,8 @@ contract SyntheticTrader {
         
         address List_msg_sender = Sells[No_Sell_Orders].Address;
         
+        Own_FeedBack[msg.sender] +=002000; // xx2 xxx = Buy_from_List_send_Seller
+        
         if (Own_Amount[List_msg_sender] > 0) {
             
             Own_Funds[List_msg_sender]    += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
@@ -254,6 +285,8 @@ contract SyntheticTrader {
     }  
   
     function Sell_from_List_edit_List(int Transfer_Amount) { // Internal
+        
+        Own_FeedBack[msg.sender] +=000100; // xxx 1xx = Sell_from_List_edit_List
         
         if (Transfer_Amount < Buys[No_Buy_Orders].Amount) {
             // If some more available
@@ -269,6 +302,8 @@ contract SyntheticTrader {
     }
 
     function Buy_from_List_edit_List(int Transfer_Amount) { // Internal
+        
+        Own_FeedBack[msg.sender] +=000200; // xxx 2xx = Buy_from_List_edit_List
         
         if (Transfer_Amount < Sells[No_Sell_Orders].Amount) {
             // If some more is available
@@ -289,43 +324,58 @@ contract SyntheticTrader {
 
     function Create_Sell_Order() { // internal
         
+        Own_FeedBack[msg.sender] +=000010; // xxx x1x = Create_Sell_Order
+        
         Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Ref_Price * sU);
         
-        if (Amount >= Own_Amount[msg.sender]){
+        if (Amount > 0) {
+            if (Amount >= Own_Amount[msg.sender]){
+                
+                Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
+                Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
             
-            Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
-            Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
-            
-        }
+            }
         
-        if (Amount > 0 && Price > 0) {
-           Add_Sell_Order();
+            Own_Amount[msg.sender] -= Amount;
+        
+            Add_Sell_Order();
+            
         }
         Amount = 0;
     }
 
     function Create_Buy_Order() { // internal
+    
+        Own_FeedBack[msg.sender] +=000020; // xxx x2x = Create_Buy_Order
         
         Amount = min(Amount, Own_Funds[msg.sender] / Price * sU);
-        Own_Funds[msg.sender] -= Amount * Price / sU;
         
-        if (Amount > 0 && Price > 0) {
+        if (Amount > 0) {
+        
+            Own_Funds[msg.sender] -= Amount * Price / sU;
+        
             Add_Buy_Order();
+            
         }
         Amount = 0;
     }
 
     function Add_Sell_Order(){
-  
+        
+        Own_FeedBack[msg.sender] +=000001; // xxx xx1 = Add_Sell_Order
+        
         No_Sell_Orders += 1;
-  
+        
         for (int i = No_Sell_Orders; i>0; i--){
-
+            
             if (Sells[i-1].Price > Price || i == 1){
-   
+                
                 Sells[i].Price      = Price;
                 Sells[i].Amount     = Amount;
                 Sells[i].Address    = msg.sender;
+                
+                Own_FB_Exit[msg.sender] = 120000 + i; // Added Sell Order
+                
                 i = 0;
                 
             }else{
@@ -338,6 +388,8 @@ contract SyntheticTrader {
 
     function Add_Buy_Order(){
   
+        Own_FeedBack[msg.sender] +=000002; // xxx xx2 = Add_Buy_Order
+  
         No_Buy_Orders += 1;
   
         for (int i = No_Buy_Orders; i>0; i--){
@@ -347,6 +399,9 @@ contract SyntheticTrader {
                 Buys[i].Price      = Price;
                 Buys[i].Amount     = Amount;
                 Buys[i].Address    = msg.sender;
+                
+                Own_FB_Exit[msg.sender] = 220000 + i; // Added Buy Order
+                
                 i = 0;
                 
             }else{
@@ -362,6 +417,8 @@ contract SyntheticTrader {
 // ------------------------------------------------------------------------------
         
     function Cancel_Sell_Order(){
+ 
+        Own_FeedBack[msg.sender] +=030000; // x3x xxx = Cancel_Sell_Order
  
         int flag = 0;
         
@@ -392,9 +449,13 @@ contract SyntheticTrader {
             No_Sell_Orders -= 1;
         }
         
+        Own_FB_Exit[msg.sender] = 330010 + flag; // 10 = no Order found // 11 = order canceld
+        
     }
  
     function Cancel_Buy_Order(){
+        
+        Own_FeedBack[msg.sender] +=040000; // x4x xxx = Cancel_Buy_Order
         
         int flag = 0;
         
@@ -419,6 +480,9 @@ contract SyntheticTrader {
         if (flag == 1){
             No_Buy_Orders -= 1;
         }
+        
+        Own_FB_Exit[msg.sender] = 340010 + flag; // 10 = no Order found // 11 = order canceld
+        
     }
         
         

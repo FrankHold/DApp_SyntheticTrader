@@ -145,7 +145,7 @@ contract SyntheticTrader {
 // Buy / Sell from List
 // ------------------------------------------------------------------------------
 
-    function Sell_from_List() { //  internal 
+    function Sell_from_List() internal { //  internal 
     
         int List_Amount = Buys[No_Buy_Orders].Amount;
         int List_Price  = Buys[No_Buy_Orders].Price;
@@ -188,7 +188,7 @@ contract SyntheticTrader {
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
    }
    
-    function Buy_from_List() { //  internal 
+    function Buy_from_List() internal { //  internal 
     
         int List_Amount = Sells[No_Sell_Orders].Amount;
         int List_Price  = Sells[No_Sell_Orders].Price;
@@ -242,7 +242,7 @@ contract SyntheticTrader {
         Buy_from_List_edit_List(Transfer_Amount);
     }
   
-    function Sell_from_List_send_Buyer(int Transfer_Amount) { // Internal
+    function Sell_from_List_send_Buyer(int Transfer_Amount) internal { // Internal
         
         address List_msg_sender = Buys[No_Buy_Orders].Address;
         
@@ -264,7 +264,7 @@ contract SyntheticTrader {
         
     }
 
-    function Buy_from_List_send_Seller(int Transfer_Amount) { // Internal
+    function Buy_from_List_send_Seller(int Transfer_Amount) internal { // Internal
         
         address List_msg_sender = Sells[No_Sell_Orders].Address;
         
@@ -282,7 +282,7 @@ contract SyntheticTrader {
         
     }  
   
-    function Sell_from_List_edit_List(int Transfer_Amount) { // Internal
+    function Sell_from_List_edit_List(int Transfer_Amount) internal { // Internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 25; // 25 = Sell_from_List_edit_List
         
@@ -299,7 +299,7 @@ contract SyntheticTrader {
         }
     }
 
-    function Buy_from_List_edit_List(int Transfer_Amount) { // Internal
+    function Buy_from_List_edit_List(int Transfer_Amount) internal { // Internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 26; // 26 = Buy_from_List_edit_List
         
@@ -320,7 +320,7 @@ contract SyntheticTrader {
 // Create Order
 // ------------------------------------------------------------------------------
 
-    function Create_Sell_Order() { // internal
+    function Create_Sell_Order() internal { // internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
@@ -342,7 +342,7 @@ contract SyntheticTrader {
         Amount = 0;
     }
 
-    function Create_Buy_Order() { // internal
+    function Create_Buy_Order() internal { // internal
     
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 32; // 32 = Create_Buy_Order
         
@@ -358,7 +358,7 @@ contract SyntheticTrader {
         Amount = 0;
     }
 
-    function Add_Sell_Order(){
+    function Add_Sell_Order() internal { // internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 33; // 33 = Add_Sell_Order
         
@@ -384,7 +384,7 @@ contract SyntheticTrader {
         }
     }
 
-    function Add_Buy_Order(){
+    function Add_Buy_Order() internal { // internal
   
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 34; // 34 = Add_Buy_Order
   
@@ -414,7 +414,7 @@ contract SyntheticTrader {
 // Cancel Order
 // ------------------------------------------------------------------------------
         
-    function Cancel_Sell_Order(){
+    function Cancel_Sell_Order() internal { // internal
  
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 41; // 41 = Cancel_Sell_Order
  
@@ -451,7 +451,7 @@ contract SyntheticTrader {
         Own_FeedBack[msg.sender] += flag;           // 91 canceled / 90 not canceled
     }
  
-    function Cancel_Buy_Order(){
+    function Cancel_Buy_Order() internal { // internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 42; // 42 = Cancel_Buy_Order
         
@@ -489,11 +489,11 @@ contract SyntheticTrader {
 // ------------------------------------------------------------------------------
 // https://github.com/ethereum/wiki/wiki/Solidity-Features
 
-  function max(int a, int b) returns (int) {
+  function max(int a, int b) internal returns (int) { // internal
     if (a > b) return a;
     else return b;
   }
-  function min(int a, int b) returns (int) {
+  function min(int a, int b) internal returns (int) { // internal
     if (a < b) return a;
     else return b;
   }

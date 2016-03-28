@@ -24,3 +24,15 @@ If you want to sell something without having it - the contract places some of yo
 The security is released as soon you buy your sold amount back. 
 
 Feel free to copy, modify and deploy the contract as you wish. 
+
+----
+ToDo
+
+- Debugging
+    Variable "Own_FeedBack" returns a number which indicates what the contract did
+    Example 12323401  
+        12  Buy_Order
+        32  Create_Buy_Order
+        34  Add_Sell_Order
+        01  Place the order on position 1 of the list
+- GUI 

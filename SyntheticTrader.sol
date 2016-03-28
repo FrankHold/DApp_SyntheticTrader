@@ -65,7 +65,7 @@ contract SyntheticTrader {
         while (Amount > 0 && Price > 0){
             if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
                 
-                if (Buys[No_Buy_Orders].Price >= Price) { // Sell if price is higher than ask
+                if (Buys[No_Buy_Orders].Price >= Price && No_Buy_Orders > 0) { // Sell if price is higher than ask
                     // Sell
                     
                     Sell_from_List();
@@ -114,13 +114,13 @@ contract SyntheticTrader {
         
         Price  = Price_in_Wei;
         
-        if (Price <= Buys[No_Buy_Orders].Price){
+        if (Price <= Buys[No_Buy_Orders].Price && No_Buy_Orders > 0){
         
             Cancel_Buy_Order();
         
         }
     
-        if (Price >= Sells[No_Sell_Orders].Price){
+        if (Price >= Sells[No_Sell_Orders].Price && No_Sell_Orders > 0){
         
             Cancel_Sell_Order();
             
@@ -135,7 +135,7 @@ contract SyntheticTrader {
         if (Own_Funds[msg.sender]>0){
             msg.sender.send(uint(Own_Funds[msg.sender]));
             Own_Funds[msg.sender]=0;
-            Own_FeedBack[msg.sender] +=010000; // 01x xxx = Send funds
+            Own_FeedBack[msg.sender] +=010000; // x1x xxx = Send funds
         }
     }
 

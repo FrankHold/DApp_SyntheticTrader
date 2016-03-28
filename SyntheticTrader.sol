@@ -60,7 +60,7 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        Own_FeedBack[msg.sender] =100000; // 1xx xxx = Sell_Order
+        Own_FeedBack[msg.sender] =11; // 11 = Sell_Order
         
         while (Amount > 0 && Price > 0){
             if (Own_Amount[msg.sender] > 0 || Own_Funds[msg.sender] > 0 ){ 
@@ -88,7 +88,7 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        Own_FeedBack[msg.sender] =200000; // 2xx xxx = Buy_Order
+        Own_FeedBack[msg.sender] =12; // 12 = Buy_Order
         
         while (Amount > 0 && Price > 0){
             if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
@@ -110,7 +110,7 @@ contract SyntheticTrader {
   
     function Cancel_Order(int Price_in_Wei) { // Cancle all orders
         
-        Own_FeedBack[msg.sender] =300000; // 3xx xxx = Cancel_Order
+        Own_FeedBack[msg.sender] =13; // 13 = Cancel_Order
         
         Price  = Price_in_Wei;
         
@@ -130,12 +130,12 @@ contract SyntheticTrader {
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
     
-        Own_FeedBack[msg.sender] =400000; // 4xx xxx = Withdraw_All_Funds
+        Own_FeedBack[msg.sender] =14; // 14 = Withdraw_All_Funds
     
         if (Own_Funds[msg.sender]>0){
             msg.sender.send(uint(Own_Funds[msg.sender]));
             Own_Funds[msg.sender]=0;
-            Own_FeedBack[msg.sender] +=010000; // x1x xxx = Send funds
+            Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 01; // 1401 = Send funds
         }
     }
 
@@ -156,7 +156,7 @@ contract SyntheticTrader {
         int Transfer_Amount = min(Amount,List_Amount);
         int Sell_Amount = min(Transfer_Amount, max(Own_Amount[msg.sender],0));
 
-        Own_FeedBack[msg.sender] +=010000; // x1x xxx = Sell_from_List
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 21; // 21 = Sell_from_List
 
         // First sell the Amount the trader has and get the funds
         Own_Funds[msg.sender] += Sell_Amount * List_Price / sU;
@@ -177,12 +177,12 @@ contract SyntheticTrader {
         }
   
         if (Amount <= 0){
-            Own_FB_Exit[msg.sender] = 110000; // Exit Sell_from_List
+            Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 2190 = Sell_from_List
             if (Pay_Amount > 0) {
-             Own_FB_Exit[msg.sender] += 1; // Sell with Funds
+             Own_FeedBack[msg.sender] += 1; // Sell with Funds 2191 
             }
             if (Sell_Amount > 0) {
-             Own_FB_Exit[msg.sender] += 2; // Sell with Amount
+             Own_FeedBack[msg.sender] += 2; // Sell with Amount 2192  // 2193 Funds + Amount
             }
         }
   
@@ -198,7 +198,7 @@ contract SyntheticTrader {
         
         int Transfer_Amount = min(Amount,List_Amount);
         
-        Own_FeedBack[msg.sender] +=020000; // x2x xxx = Buy_from_List
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 22; // 22 = Buy_from_List
         
         if (Own_Amount[msg.sender] >= 0) {
             // trader buys only with funds // Own_Security = 0
@@ -223,7 +223,7 @@ contract SyntheticTrader {
             // exit because end of funds
             Transfer_Amount = Max_Amount;
             Amount = 0;
-            Own_FB_Exit[msg.sender] = 210000; // End of Funds
+            Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 2290 = Buy_from_List - End of Funds
         }else{
             Amount = Amount - Transfer_Amount;
         }
@@ -248,7 +248,7 @@ contract SyntheticTrader {
         
         address List_msg_sender = Buys[No_Buy_Orders].Address;
         
-        Own_FeedBack[msg.sender] +=001000; // xx1 xxx = Sell_from_List_send_Buyer
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 23; // 23 = Sell_from_List_send_Buyer
         
         if (Own_Amount[List_msg_sender] + Transfer_Amount > 0) {
             
@@ -270,7 +270,7 @@ contract SyntheticTrader {
         
         address List_msg_sender = Sells[No_Sell_Orders].Address;
         
-        Own_FeedBack[msg.sender] +=002000; // xx2 xxx = Buy_from_List_send_Seller
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 24; // 24 = Buy_from_List_send_Seller
         
         if (Own_Amount[List_msg_sender] > 0) {
             
@@ -286,7 +286,7 @@ contract SyntheticTrader {
   
     function Sell_from_List_edit_List(int Transfer_Amount) { // Internal
         
-        Own_FeedBack[msg.sender] +=000100; // xxx 1xx = Sell_from_List_edit_List
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 25; // 25 = Sell_from_List_edit_List
         
         if (Transfer_Amount < Buys[No_Buy_Orders].Amount) {
             // If some more available
@@ -303,7 +303,7 @@ contract SyntheticTrader {
 
     function Buy_from_List_edit_List(int Transfer_Amount) { // Internal
         
-        Own_FeedBack[msg.sender] +=000200; // xxx 2xx = Buy_from_List_edit_List
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 26; // 26 = Buy_from_List_edit_List
         
         if (Transfer_Amount < Sells[No_Sell_Orders].Amount) {
             // If some more is available
@@ -324,7 +324,7 @@ contract SyntheticTrader {
 
     function Create_Sell_Order() { // internal
         
-        Own_FeedBack[msg.sender] +=000010; // xxx x1x = Create_Sell_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
         Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Ref_Price * sU);
         
@@ -346,7 +346,7 @@ contract SyntheticTrader {
 
     function Create_Buy_Order() { // internal
     
-        Own_FeedBack[msg.sender] +=000020; // xxx x2x = Create_Buy_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 32; // 32 = Create_Buy_Order
         
         Amount = min(Amount, Own_Funds[msg.sender] / Price * sU);
         
@@ -362,7 +362,7 @@ contract SyntheticTrader {
 
     function Add_Sell_Order(){
         
-        Own_FeedBack[msg.sender] +=000001; // xxx xx1 = Add_Sell_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 33; // 33 = Add_Sell_Order
         
         No_Sell_Orders += 1;
         
@@ -374,7 +374,7 @@ contract SyntheticTrader {
                 Sells[i].Amount     = Amount;
                 Sells[i].Address    = msg.sender;
                 
-                Own_FB_Exit[msg.sender] = 120000 + i; // Added Sell Order
+                Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + i; // Added Sell Order
                 
                 i = 0;
                 
@@ -388,7 +388,7 @@ contract SyntheticTrader {
 
     function Add_Buy_Order(){
   
-        Own_FeedBack[msg.sender] +=000002; // xxx xx2 = Add_Buy_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 34; // 34 = Add_Buy_Order
   
         No_Buy_Orders += 1;
   
@@ -400,7 +400,7 @@ contract SyntheticTrader {
                 Buys[i].Amount     = Amount;
                 Buys[i].Address    = msg.sender;
                 
-                Own_FB_Exit[msg.sender] = 220000 + i; // Added Buy Order
+                Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + i; // Added Buy Order
                 
                 i = 0;
                 
@@ -418,7 +418,7 @@ contract SyntheticTrader {
         
     function Cancel_Sell_Order(){
  
-        Own_FeedBack[msg.sender] +=030000; // x3x xxx = Cancel_Sell_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 41; // 41 = Cancel_Sell_Order
  
         int flag = 0;
         
@@ -449,13 +449,13 @@ contract SyntheticTrader {
             No_Sell_Orders -= 1;
         }
         
-        Own_FB_Exit[msg.sender] = 330010 + flag; // 10 = no Order found // 11 = order canceld
-        
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 90 = exit
+        Own_FeedBack[msg.sender] += flag;           // 91 canceled / 90 not canceled
     }
  
     function Cancel_Buy_Order(){
         
-        Own_FeedBack[msg.sender] +=040000; // x4x xxx = Cancel_Buy_Order
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 42; // 42 = Cancel_Buy_Order
         
         int flag = 0;
         
@@ -481,8 +481,8 @@ contract SyntheticTrader {
             No_Buy_Orders -= 1;
         }
         
-        Own_FB_Exit[msg.sender] = 340010 + flag; // 10 = no Order found // 11 = order canceld
-        
+        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 90 = exit
+        Own_FeedBack[msg.sender] += flag;           // 91 canceled / 90 not canceled
     }
         
         

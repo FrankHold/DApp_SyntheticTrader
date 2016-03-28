@@ -44,7 +44,7 @@ contract SyntheticTrader {
        // Initialization
        No_Sell_Orders = 0;                  // Start without orders
        No_Buy_Orders  = 0;
-       Ref_Price      = 1*sU;               // Reference Price in Wei
+       Ref_Price      = 1*10**18;            // Reference Price in Wei
     }
 
     function () { // Send Ether to the contract

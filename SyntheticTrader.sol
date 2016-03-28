@@ -420,7 +420,7 @@ contract SyntheticTrader {
  
         int flag = 0;
         
-        for (int i = 1; i < No_Sell_Orders; i++){
+        for (int i = 1; i <= No_Sell_Orders+1; i++){
         
             if (Sells[i].Price == Price && msg.sender == Sells[i].Address  &&  flag == 0) {
                 
@@ -432,7 +432,7 @@ contract SyntheticTrader {
                 }
                 
                 Own_Amount[msg.sender] += Sells[i].Amount;
-                
+                No_Sell_Orders -= 1;
                 flag = 1;
             }
             
@@ -441,10 +441,6 @@ contract SyntheticTrader {
                 Sells[i].Amount     = Sells[i+1].Amount;
                 Sells[i].Address    = Sells[i+1].Address;
             }
-        }
-        
-        if (flag == 1){
-            No_Sell_Orders -= 1;
         }
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 90 = exit
@@ -457,12 +453,12 @@ contract SyntheticTrader {
         
         int flag = 0;
         
-        for (int i = 1; i < No_Buy_Orders; i++){
+        for (int i = 1; i <= No_Buy_Orders+1; i++){
             
             if (Buys[i].Price == Price && msg.sender == Buys[i].Address  &&  flag == 0) {
                 
                 Own_Funds[msg.sender] += Buys[i].Price * Buys[i].Amount / sU;
-                
+                No_Buy_Orders -= 1;
                 flag = 1;
                 
             }
@@ -473,10 +469,6 @@ contract SyntheticTrader {
                 Buys[i].Address    = Buys[i+1].Address;
             }
             
-        }
-        
-        if (flag == 1){
-            No_Buy_Orders -= 1;
         }
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 90 = exit

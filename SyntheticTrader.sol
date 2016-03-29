@@ -152,7 +152,8 @@ contract SyntheticTrader {
         int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
-        int Sell_Amount = min(Transfer_Amount, max(Own_Amount[msg.sender],0));
+        int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
+        int Sell_Amount = min(Transfer_Amount, Own_Amount_Credit);
 
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 21; // 21 = Sell_from_List
 
@@ -227,9 +228,9 @@ contract SyntheticTrader {
         }
         
         if (Own_Amount[msg.sender] < 0) {
-            int Free_Security = max(Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount[msg.sender]), 1), 0);
-            Own_Funds[msg.sender]    += Free_Security;
-            Own_Security[msg.sender] -= Free_Security;
+            int Free_Security = Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount[msg.sender]), 1);
+            Own_Funds[msg.sender]    += max(Free_Security, 0);
+            Own_Security[msg.sender] -= max(Free_Security, 0);
         }
         Own_Funds[msg.sender]  -=  Transfer_Amount * List_Price / sU;
         Own_Amount[msg.sender] +=  Transfer_Amount;
@@ -324,13 +325,14 @@ contract SyntheticTrader {
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
-        Amount = min(Amount, max(Own_Amount[msg.sender],0) + Own_Funds[msg.sender] / Ref_Price * sU);
+        int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
+        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] / Ref_Price * sU);
         
         if (Amount > 0) {
             if (Amount >= Own_Amount[msg.sender]){
                 
-                Own_Funds[msg.sender]    -= (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
-                Own_Security[msg.sender] += (Amount - max(Own_Amount[msg.sender], 0)) * Ref_Price / sU;
+                Own_Funds[msg.sender]    -= (Amount - Own_Amount_Credit) * Ref_Price / sU;
+                Own_Security[msg.sender] += (Amount - Own_Amount_Credit) * Ref_Price / sU;
             
             }
         

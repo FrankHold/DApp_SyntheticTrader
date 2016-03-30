@@ -198,24 +198,25 @@ contract SyntheticTrader {
         int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
+        int Own_Amount_Debt = min(Own_Amount, 0) * (-1)
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 22; // 22 = Buy_from_List
         
-        if (Own_Amount[msg.sender] >= 0) {
+        if (Own_Amount_Debt == 0) { // No Debt
             // trader buys only with funds // Own_Security = 0
             
             Max_Amount = Own_Funds[msg.sender] / List_Price * sU;
             
-        } else { // Own_Amount < 0  Security > 0
+        } else { // Own_Amount < 0  Security > 0  // Debt
 
-            if (List_Price <= Own_Security[msg.sender] / (-Own_Amount[msg.sender] * sU)){
+            if (List_Price <= Own_Security[msg.sender] / Own_Amount_Debt * sU){
                 // trader can buy with the security
                 Max_Amount = (Own_Security[msg.sender] + Own_Funds[msg.sender]) / List_Price * sU;
             }else{
                 // trader has to add funds to relese his security
-                Max_Amount = Own_Funds[msg.sender] / (List_Price - Own_Security[msg.sender] / (-Own_Amount[msg.sender]) * sU) * sU;
-                Max_Amount = min(Max_Amount,-Own_Amount[msg.sender]);
-                int rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] / (-Own_Amount[msg.sender]) * sU) * Max_Amount / sU;
+                Max_Amount = Own_Funds[msg.sender] / (List_Price - Own_Security[msg.sender] / Own_Amount_Debt * sU) * sU;
+                Max_Amount = min(Max_Amount, Own_Amount_Debt);
+                int rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] / Own_Amount_Debt * sU) * Max_Amount / sU;
                 Max_Amount += rem_Funds / List_Price * sU;
             }
         }
@@ -230,7 +231,7 @@ contract SyntheticTrader {
         }
         
         if (Own_Amount[msg.sender] < 0) {
-            int Free_Security = Own_Security[msg.sender] * min(Transfer_Amount / (-Own_Amount[msg.sender]), 1);
+            int Free_Security = Own_Security[msg.sender] * min(Transfer_Amount / Own_Amount_Debt * sU, sU) / sU;
             Own_Funds[msg.sender]    += max(Free_Security, 0);
             Own_Security[msg.sender] -= max(Free_Security, 0);
         }
@@ -430,8 +431,8 @@ contract SyntheticTrader {
                 
                 if (Own_Amount[msg.sender] < 0){
                 
-                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]), 1);
-                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]), 1);
+                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]) * sU, sU) / sU;
+                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]) * sU, sU) / sU;
                 
                 }
                 

@@ -5,8 +5,10 @@ contract SyntheticTrader {
 
     // 'Simple' list of open orders
     // Sorted by price in buy and sell orders
+    // If you sell more than you have - a security is placed
+    // The security is released as soon you are back to 0
     
-    // Links
+    // Heavily used links
     // https://chriseth.github.io/browser-solidity/
     // http://solidity.readthedocs.org/en/latest/
 

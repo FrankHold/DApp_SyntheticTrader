@@ -71,10 +71,25 @@ buy[1].Price    900000000000000000
 buy[1].Address  0x075a36E8827CE7791E5D05A346eD348aEadE5C21
 Own_Security    30000000000000000
 Own_Amount      -30000000000000000
-Own_Funds       960000000000000000 [=970000000000000000-10000000000000000*1000000000000000000/1000000000000000000]
-Own_FeedBack    
+Own_Funds       960500000000000000 [=970000000000000000-10000000000000000*950000000000000000/1000000000000000000]
+Own_FeedBack    12 32 34 02 
 
-Own_FeedBack  1131 Error 
+-------------------------------------------------------------------------------------------------------------
+
+
+
+Own_FeedBack  11 31 Error ????????
+
+
+326 Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order 
+327          
+328         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
+                                       (-30000000000000000,0)
+                Own_Amount_Credit =     0
+329         Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] / Ref_Price * sU); 
+                        (10000000000000000,0+970000000000000000/10000000000000000*1000000000000000000)
+330          
+331         if (Amount > 0) { ... 
 
 
 

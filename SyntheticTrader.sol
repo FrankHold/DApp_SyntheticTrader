@@ -198,7 +198,7 @@ contract SyntheticTrader {
         int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
-        int Own_Amount_Debt = min(Own_Amount, 0) * (-1)
+        int Own_Amount_Debt = min(Own_Amount[msg.sender], 0) * (-1);
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 22; // 22 = Buy_from_List
         

@@ -159,3 +159,46 @@ must somehow result in 0 ??
 
 Error:  min( ... , max( ... , ...) )
 Better: max( ... , ...); min( ... , ... );
+
+
+------------------------ TEST CONTRACT -----------------------------
+
+contract Test {
+
+    int public Test_A;
+    int public Test_B;
+    int public Test_C;
+    int public Test_D;
+    int public Test_E;
+    int public Test_F;
+
+    function () { // send ether
+    } 
+    
+    function Test() { // first call
+    }
+ 
+    function Test_Test() {
+        Test_A = 100;
+        Test_B =  50;
+        Test_C = 100;
+        Test_D = 100;
+        Test_E = 100;
+        Test_F = 100;
+                                                    // Exp. // Result
+        Test_C = Test_B / Test_A * Test_E;          // 50   // 0
+        Test_D = Test_B * Test_E / Test_A;          // 50   // 50
+        Test_E = max(Test_B , 0);                   // 50   // 50
+        Test_F = max(Test_B * Test_E / Test_A , 0); // 25   // 25
+    }   
+    
+  function max(int a, int b) returns (int) {
+    if (a > b) return a;
+    else return b;
+  }
+  function min(int a, int b)returns (int) {
+    if (a < b) return a;
+    else return b;
+  }
+
+}

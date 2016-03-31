@@ -88,7 +88,7 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        Own_FeedBack[msg.sender] =12; // 12 = Buy_Order
+        Own_FeedBack[msg.sender] = 12; // 12 = Buy_Order
         
         while (Amount > 0 && Price > 0){
             if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
@@ -110,7 +110,7 @@ contract SyntheticTrader {
   
     function Cancel_Order(int Price_in_Wei) { // Cancle all orders
         
-        Own_FeedBack[msg.sender] =13; // 13 = Cancel_Order
+        Own_FeedBack[msg.sender] = 13; // 13 = Cancel_Order
         
         Price  = Price_in_Wei;
         
@@ -205,19 +205,19 @@ contract SyntheticTrader {
         if (Own_Amount_Debt == 0) { // No Debt
             // trader buys only with funds // Own_Security = 0
             
-            Max_Amount = Own_Funds[msg.sender] / List_Price * sU;
+            Max_Amount = Own_Funds[msg.sender] * sU / List_Price;
             
         } else { // Own_Amount < 0  Security > 0  // Debt
 
-            if (List_Price <= Own_Security[msg.sender] / Own_Amount_Debt * sU){
+            if (List_Price <= Own_Security[msg.sender] * sU / Own_Amount_Debt){
                 // trader can buy with the security
-                Max_Amount = (Own_Security[msg.sender] + Own_Funds[msg.sender]) / List_Price * sU;
+                Max_Amount = (Own_Security[msg.sender] + Own_Funds[msg.sender]) * sU / List_Price;
             }else{
                 // trader has to add funds to relese his security
-                Max_Amount = Own_Funds[msg.sender] / (List_Price - Own_Security[msg.sender] / Own_Amount_Debt * sU) * sU;
+                Max_Amount = Own_Funds[msg.sender] * sU / (List_Price - Own_Security[msg.sender] * sU / Own_Amount_Debt);
                 Max_Amount = min(Max_Amount, Own_Amount_Debt);
-                int rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] / Own_Amount_Debt * sU) * Max_Amount / sU;
-                Max_Amount += rem_Funds / List_Price * sU;
+                int rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] * sU / Own_Amount_Debt) * Max_Amount / sU;
+                Max_Amount += rem_Funds * sU / List_Price;
             }
         }
         
@@ -231,7 +231,7 @@ contract SyntheticTrader {
         }
         
         if (Own_Amount[msg.sender] < 0) {
-            int Free_Security = Own_Security[msg.sender] * min(Transfer_Amount / Own_Amount_Debt * sU, sU) / sU;
+            int Free_Security = Own_Security[msg.sender] * min(Transfer_Amount * sU / Own_Amount_Debt, sU) / sU;
             Own_Funds[msg.sender]    += max(Free_Security, 0);
             Own_Security[msg.sender] -= max(Free_Security, 0);
         }
@@ -329,7 +329,7 @@ contract SyntheticTrader {
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
-        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] / Ref_Price * sU);
+        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] * sU / Ref_Price);
         
         if (Amount > 0) {
             if (Amount >= Own_Amount[msg.sender]){
@@ -351,7 +351,7 @@ contract SyntheticTrader {
     
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 32; // 32 = Create_Buy_Order
         
-        Amount = min(Amount, Own_Funds[msg.sender] / Price * sU);
+        Amount = min(Amount, Own_Funds[msg.sender] * sU / Price);
         
         if (Amount > 0) {
         
@@ -431,8 +431,8 @@ contract SyntheticTrader {
                 
                 if (Own_Amount[msg.sender] < 0){
                 
-                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]) * sU, sU) / sU;
-                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount / (-Own_Amount[msg.sender]) * sU, sU) / sU;
+                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount * sU / (-Own_Amount[msg.sender]), sU) / sU;
+                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount * sU / (-Own_Amount[msg.sender]), sU) / sU;
                 
                 }
                 

@@ -215,9 +215,10 @@ contract SyntheticTrader {
             }else{
                 // trader has to add funds to relese his security
                 Max_Amount = Own_Funds[msg.sender] * sU / (List_Price - Own_Security[msg.sender] * sU / Own_Amount_Debt);
-                Max_Amount = min(Max_Amount, Own_Amount_Debt);
-                int rem_Funds = Own_Funds[msg.sender] - (List_Price - Own_Security[msg.sender] * sU / Own_Amount_Debt) * Max_Amount / sU;
-                Max_Amount += rem_Funds * sU / List_Price;
+                if (Own_Amount_Debt<Max_Amount){
+                    int rem_Funds = Own_Funds[msg.sender] - (List_Price * Own_Amount_Debt / sU - Own_Security[msg.sender]);
+                    Max_Amount = Own_Amount_Debt + rem_Funds * sU / List_Price;
+                }
             }
         }
         

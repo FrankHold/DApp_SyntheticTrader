@@ -16,8 +16,6 @@ contract SyntheticTrader {
     int public No_Buy_Orders;  // Max number of buy orders
     int public Amount;         // Amount of stock to be traded
     int public Price;          // Price of the stock to be traded
-    int public Ref_Price;      // Each by / sell changes the reference price
-                               // Only used to determine the collateral / security
 
     int public sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
@@ -164,18 +162,14 @@ contract SyntheticTrader {
         
         // Then sell the remaining amount with funds as security
         
-        int Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds[msg.sender] / Ref_Price * sU);
+        int Pay_Amount = min(Transfer_Amount - Sell_Amount, Own_Funds[msg.sender]  * sU / List_Price);
         
-        Own_Security[msg.sender] += Pay_Amount * List_Price / sU;
-        Own_Security[msg.sender] += Pay_Amount * Ref_Price / sU;
-        Own_Funds[msg.sender]    -= Pay_Amount * Ref_Price / sU;
+        Own_Security[msg.sender] += Pay_Amount * List_Price / sU; // form buyer
+        Own_Security[msg.sender] += Pay_Amount * List_Price / sU; // from seller
+        Own_Funds[msg.sender]    -= Pay_Amount * List_Price / sU;
   
         Amount                   -= Pay_Amount + Sell_Amount;
         Own_Amount[msg.sender]   -= Pay_Amount + Sell_Amount;
-  
-        if (Pay_Amount + Sell_Amount > 0) {
-            Ref_Price = (Ref_Price * 99 + List_Price) / 100;
-        }
   
         if (Amount <= 0){
             Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 2190 = Sell_from_List
@@ -238,10 +232,6 @@ contract SyntheticTrader {
         }
         Own_Funds[msg.sender]  -=  Transfer_Amount * List_Price / sU;
         Own_Amount[msg.sender] +=  Transfer_Amount;
-        
-        if (Transfer_Amount > 0) {
-            Ref_Price = (Ref_Price * 99 + List_Price) / 100;
-        }
         
         Buy_from_List_send_Seller(Transfer_Amount);
         Buy_from_List_edit_List(Transfer_Amount);
@@ -330,13 +320,13 @@ contract SyntheticTrader {
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
-        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] * sU / Ref_Price);
+        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] * sU / Price);
         
         if (Amount > 0) {
             if (Amount >= Own_Amount[msg.sender]){
                 
-                Own_Funds[msg.sender]    -= (Amount - Own_Amount_Credit) * Ref_Price / sU;
-                Own_Security[msg.sender] += (Amount - Own_Amount_Credit) * Ref_Price / sU;
+                Own_Funds[msg.sender]    -= (Amount - Own_Amount_Credit) * Price / sU;
+                Own_Security[msg.sender] += (Amount - Own_Amount_Credit) * Price / sU;
             
             }
         

@@ -22,6 +22,7 @@ contract SyntheticTrader {
     mapping (address => int) public Own_Funds;      // Funds of the trader in Wei (access by trader)
     mapping (address => int) public Own_Security;   // Security of the trader in Wei (no access by trader)
     mapping (address => int) public Own_Amount;     // Amount on Stock in Stock/pU
+    mapping (address => int) public Own_Amount_Sell_Order;// Amount on Stock in sell orders in Stock/pU
     mapping (address => int) public Own_FeedBack;   // For debugging
     
     struct Sell
@@ -29,6 +30,7 @@ contract SyntheticTrader {
        int Amount;
        int Price;
        address Address;
+       int Security;
     }
     mapping (int => Sell) public Sells;
     
@@ -82,22 +84,35 @@ contract SyntheticTrader {
     }
 
     function Buy_Order(int Amount_in_sU, int Price_in_Wei) { // New Buy order
+        Buy_Order_(Amount_in_sU,Price_in_Wei,msg.sender,0)
+    }
+    
+    function Buy_Order_(int Amount_in_sU, int Price_in_Wei, address msg_sender, int Margin_Call) internal { // New Buy order
         
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        Own_FeedBack[msg.sender] = 12; // 12 = Buy_Order
+        Own_FeedBack[msg_sender] = 12; // 12 = Buy_Order
         
         while (Amount > 0 && Price > 0){
-            if (Own_Funds[msg.sender] + Own_Security[msg.sender] > 0){
+            if (Own_Funds[msg_sender] + Own_Security[msg_sender] > 0){
                 if (Sells[No_Sell_Orders].Price <= Price && No_Sell_Orders > 0) { // Buy if price is lower than ask
                     // Buy
                      
-                    Buy_from_List();
+                    Buy_from_List(msg_sender);
                      
                 } else {// to high in price
+                    if (){
                     // Create Sell order with the rest Amount
-                    Create_Buy_Order();
+                        Create_Buy_Order(msg_sender);
+                    } else {
+                    // Margin Call
+                        Own_Funds[msg_sender]-=Amount * Price / sU;
+                        Own_Funds[0000000000]+=Amount * Price / sU;
+                        Own_Amount[msg_sender] =0;
+                        Own_Amount[0000000000]-=Amount;
+                        Create_Buy_Order(0000000000);
+                    }
                 }
             } else {
                 Amount = 0;
@@ -192,7 +207,7 @@ contract SyntheticTrader {
         int Max_Amount;
         
         int Transfer_Amount = min(Amount,List_Amount);
-        int Own_Amount_Debt = min(Own_Amount[msg.sender], 0) * (-1);
+        int Own_Amount_Debt = min(Own_Amount[msg.sender]+ Own_Amount_Sell_Order[msg.sender], 0) * (-1);
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 22; // 22 = Buy_from_List
         

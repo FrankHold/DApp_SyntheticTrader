@@ -97,13 +97,12 @@ contract SyntheticTrader {
     }
 
     function Buy_Order(int Amount_in_sU, int Price_in_Wei) { // New Buy order
-        Buy_Order_(Amount_in_sU,Price_in_Wei,msg.sender,0);
-    }
-    
-    function Buy_Order_(int Amount_in_sU, int Price_in_Wei, address msg_sender, int Margin_Call) internal { // New Buy order
-        
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
+        Buy_Order_(msg.sender,0);
+    }
+    
+    function Buy_Order_(address msg_sender, int Margin_Call) internal { // New Buy order
         
         Own_FeedBack[msg.sender] = 12; // 12 = Buy_Order
         
@@ -176,7 +175,7 @@ contract SyntheticTrader {
                     Price  = Own_Security[addr] * sU / Own_Amount_Debt;
                     Own_Funds[addr] = Own_Funds[addr] + Own_Security[addr];
                     Own_Security[addr] = 0;
-                    Buy_Order_(Amount, Price, addr, 1); // Address and 1 for Margin Call
+                    Buy_Order_(addr, 1); // Address and 1 for Margin Call
                     
                     i = 0 ; // Exit
                 }
@@ -185,9 +184,9 @@ contract SyntheticTrader {
     }
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 
-    
+        
         Own_FeedBack[msg.sender] =14; // 14 = Withdraw_All_Funds
-    
+        
         if (Own_Funds[msg.sender]>0){
             msg.sender.send(uint(Own_Funds[msg.sender]));
             Own_Funds[msg.sender]=0;

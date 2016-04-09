@@ -12,6 +12,7 @@ contract SyntheticTrader {
     // https://chriseth.github.io/browser-solidity/
     // http://solidity.readthedocs.org/en/latest/
 
+    int public No_Accounts;    // Max number of accounts
     int public No_Sell_Orders; // Max number of sell orders
     int public No_Buy_Orders;  // Max number of buy orders
     int public Amount;         // Amount of stock to be traded
@@ -19,11 +20,18 @@ contract SyntheticTrader {
 
     int public sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
+    mapping (address => int) public Own_Account_No; // Account number
     mapping (address => int) public Own_Funds;      // Funds of the trader in Wei (access by trader)
     mapping (address => int) public Own_Security;   // Security of the trader in Wei (no access by trader)
     mapping (address => int) public Own_Amount;     // Amount on Stock in Stock/pU
     mapping (address => int) public Own_Amount_Sell_Order;// Amount on Stock in sell orders in Stock/pU
     mapping (address => int) public Own_FeedBack;   // For debugging
+    
+    sturct Account
+    {
+        address Account_Address;
+    }
+    mapping (int => Account) public Accounts;
     
     struct Sell
     {
@@ -52,6 +60,12 @@ contract SyntheticTrader {
     function () { // Send Ether to the contract
 
       Own_Funds[msg.sender] += int(msg.value); // Add Funds in Wei
+      
+      if (Own_Account_No[msg.sender] == 0){
+        No_Accounts += 1;
+        Own_Account_No[msg.sender] = No_Accounts;
+        Accounts[No_Accounts].Account_Address = msg.sender;
+      }
 
     }
 
@@ -139,6 +153,34 @@ contract SyntheticTrader {
             
         }
     
+    }
+    
+    function Margin_Call(){
+        // check if there is an account with not enough security
+        address addr;
+        int Margin;
+        int Own_Amount_Debt;
+        
+        for (int i = No_Accounts; i>0; i--){
+            addr = Accounts[i].Account_Address;
+            Own_Amount_Debt = min(Own_Amount[addr] + Own_Amount_Sell_Order[addr], 0) * (-1);
+            if (Own_Amount_Debt > 0 && Sells[No_Sell_Orders].Price > 0){
+                Margin = Own_Security[addr] * sU / Own_Amount_Debt;
+                if (Sells[No_Sell_Orders].Price > Margin * 9 / 10){
+                    ' Caller gets some of the security for the call
+                    Own_Funds[msg.sender] += Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;
+                    Own_Security[addr]    -= Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;
+                    ' Margin Call
+                    Amount = Own_Amount_Debt;
+                    Price  = Own_Security[addr] * sU / Own_Amount_Debt;
+                    Own_Funds[addr] = Own_Funds[addr] + Own_Security[addr];
+                    Own_Security = 0;
+                    Buy_Order_(addr, 1); // Address and 1 for Margin Call
+                    
+                    i = 0 ; // Exit
+                }
+            }
+        }
     }
 
     function Withdraw_All_Funds() { // Withdraw all the free funds of the trader 

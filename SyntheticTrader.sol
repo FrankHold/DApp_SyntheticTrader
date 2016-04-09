@@ -27,7 +27,7 @@ contract SyntheticTrader {
     mapping (address => int) public Own_Amount_Sell_Order;// Amount on Stock in sell orders in Stock/pU
     mapping (address => int) public Own_FeedBack;   // For debugging
     
-    sturct Account
+    struct Account
     {
         address Account_Address;
     }
@@ -54,7 +54,6 @@ contract SyntheticTrader {
        // Initialization
        No_Sell_Orders = 0;                  // Start without orders
        No_Buy_Orders  = 0;
-       Ref_Price      = 1*10**18;            // Reference Price in Wei
     }
 
     function () { // Send Ether to the contract
@@ -98,7 +97,7 @@ contract SyntheticTrader {
     }
 
     function Buy_Order(int Amount_in_sU, int Price_in_Wei) { // New Buy order
-        Buy_Order_(Amount_in_sU,Price_in_Wei,msg.sender,0)
+        Buy_Order_(Amount_in_sU,Price_in_Wei,msg.sender,0);
     }
     
     function Buy_Order_(int Amount_in_sU, int Price_in_Wei, address msg_sender, int Margin_Call) internal { // New Buy order
@@ -116,7 +115,7 @@ contract SyntheticTrader {
                     Buy_from_List(msg_sender);
                      
                 } else {// to high in price
-                    if (){
+                    if (Margin_Call == 0){
                     // Create Sell order with the rest Amount
                         Create_Buy_Order(msg_sender);
                     } else {
@@ -169,15 +168,15 @@ contract SyntheticTrader {
                 Margin = Own_Security[addr] * sU / Own_Amount_Debt;
                 if (Sells[No_Sell_Orders].Price > Margin * 9 / 10){
                     Own_FeedBack[addr] = 15; // 15 = Margin Call
-                    ' Caller gets some of the security for the call
+                    // Caller gets some of the security for the call
                     Own_Funds[msg.sender] += Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;
                     Own_Security[addr]    -= Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;
-                    ' Margin Call
+                    // Margin Call
                     Amount = Own_Amount_Debt;
                     Price  = Own_Security[addr] * sU / Own_Amount_Debt;
                     Own_Funds[addr] = Own_Funds[addr] + Own_Security[addr];
-                    Own_Security = 0;
-                    Buy_Order_(addr, 1); // Address and 1 for Margin Call
+                    Own_Security[addr] = 0;
+                    Buy_Order_(Amount, Price, addr, 1); // Address and 1 for Margin Call
                     
                     i = 0 ; // Exit
                 }
@@ -244,7 +243,7 @@ contract SyntheticTrader {
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
    }
    
-    function Buy_from_List() internal { //  internal 
+    function Buy_from_List(address msg_sender) internal { //  internal 
     
         int List_Amount = Sells[No_Sell_Orders].Amount;
         int List_Price  = Sells[No_Sell_Orders].Price;
@@ -333,7 +332,7 @@ contract SyntheticTrader {
             Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
             Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Security * Transfer_Amount / Sells[No_Sell_Orders].Amount;
             
-            Own_Amount_Sell_Order[List_msg_sender] -= Transfer_Amount * Sells[No_Sell_Orders].Security * sU / (Sells[No_Sell_Orders].Price * Transfer_Amount)
+            Own_Amount_Sell_Order[List_msg_sender] -= Transfer_Amount * Sells[No_Sell_Orders].Security * sU / (Sells[No_Sell_Orders].Price * Transfer_Amount);
             
         }
         
@@ -390,7 +389,7 @@ contract SyntheticTrader {
         if (Amount > 0) {
             if (Amount >= Own_Amount[msg.sender]){
                 
-                Security = (Amount - Own_Amount_Credit) * Price / sU
+                Security = (Amount - Own_Amount_Credit) * Price / sU;
                 Own_Funds[msg.sender]    -= Security;
             
             }
@@ -490,7 +489,7 @@ contract SyntheticTrader {
                 
                 if (Own_Amount[msg.sender] < 0){
                 
-                    Own_Amount_Sell_Order[msg.sender] -= Sells[i].Amount * Sells[i].Security * sU / (Sells[i].Price * Sells[i].Amount)
+                    Own_Amount_Sell_Order[msg.sender] -= Sells[i].Amount * Sells[i].Security * sU / (Sells[i].Price * Sells[i].Amount);
                     Own_Funds[msg.sender]             += Sells[i].Security;
                 
                 }

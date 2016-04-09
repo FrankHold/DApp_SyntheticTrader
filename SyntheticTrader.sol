@@ -280,13 +280,16 @@ contract SyntheticTrader {
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 24; // 24 = Buy_from_List_send_Seller
         
-        if (Own_Amount[List_msg_sender] > 0) {
+        if (Own_Security[List_msg_sender] == 0) {
             
             Own_Funds[List_msg_sender]    += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
             
         } else {
             
             Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
+            Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Security * Transfer_Amount / Sells[No_Sell_Orders].Amount;
+            
+            Own_Amount_Sell_Order[List_msg_sender] -= Transfer_Amount * Sells[No_Sell_Orders].Security * sU / (Sells[No_Sell_Orders].Price * Transfer_Amount)
             
         }
         
@@ -316,12 +319,14 @@ contract SyntheticTrader {
         if (Transfer_Amount < Sells[No_Sell_Orders].Amount) {
             // If some more is available
             // Don't close the list entry
-            Sells[No_Sell_Orders].Amount -= Transfer_Amount;
+            Sells[No_Sell_Orders].Security  = Sells[No_Sell_Orders].Security * (Sells[No_Sell_Orders].Amount - Transfer_Amount) / Sells[No_Sell_Orders].Amount;
+            Sells[No_Sell_Orders].Amount   -= Transfer_Amount;
         } else {
             // Close the order
-            Sells[No_Sell_Orders].Amount  = 0;
-            Sells[No_Sell_Orders].Price   = 0;
-            Sells[No_Sell_Orders].Address = 0;
+            Sells[No_Sell_Orders].Amount   = 0;
+            Sells[No_Sell_Orders].Price    = 0;
+            Sells[No_Sell_Orders].Address  = 0;
+            Sells[No_Sell_Orders].Security = 0;
             No_Sell_Orders -= 1;
         }
     }
@@ -334,42 +339,44 @@ contract SyntheticTrader {
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
+        int Security = 0;
         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
         Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] * sU / Price);
         
         if (Amount > 0) {
             if (Amount >= Own_Amount[msg.sender]){
                 
-                Own_Funds[msg.sender]    -= (Amount - Own_Amount_Credit) * Price / sU;
-                Own_Security[msg.sender] += (Amount - Own_Amount_Credit) * Price / sU;
+                Security = (Amount - Own_Amount_Credit) * Price / sU
+                Own_Funds[msg.sender]    -= Security;
             
             }
         
             Own_Amount[msg.sender] -= Amount;
+            Own_Amount_Sell_Order[msg.sender] += Amount;
         
-            Add_Sell_Order();
+            Add_Sell_Order(Security);
             
         }
         Amount = 0;
     }
 
-    function Create_Buy_Order() internal { // internal
+    function Create_Buy_Order(address msg_sender) internal { // internal
     
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 32; // 32 = Create_Buy_Order
         
-        Amount = min(Amount, Own_Funds[msg.sender] * sU / Price);
+        Amount = min(Amount, Own_Funds[msg_sender] * sU / Price);
         
         if (Amount > 0) {
         
-            Own_Funds[msg.sender] -= Amount * Price / sU;
+            Own_Funds[msg_sender] -= Amount * Price / sU;
         
-            Add_Buy_Order();
+            Add_Buy_Order(msg_sender);
             
         }
         Amount = 0;
     }
 
-    function Add_Sell_Order() internal { // internal
+    function Add_Sell_Order(int Security) internal { // internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 33; // 33 = Add_Sell_Order
         
@@ -382,6 +389,7 @@ contract SyntheticTrader {
                 Sells[i].Price      = Price;
                 Sells[i].Amount     = Amount;
                 Sells[i].Address    = msg.sender;
+                Sells[i].Security   = Security;
                 
                 Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + i; // Added Sell Order
                 
@@ -391,23 +399,24 @@ contract SyntheticTrader {
                 Sells[i].Price      = Sells[i-1].Price;
                 Sells[i].Amount     = Sells[i-1].Amount;
                 Sells[i].Address    = Sells[i-1].Address;
+                Sells[i].Security   = Sells[i-1].Security;
             }
         }
     }
 
-    function Add_Buy_Order() internal { // internal
-  
+    function Add_Buy_Order(address msg_sender) internal { // internal
+        
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 34; // 34 = Add_Buy_Order
-  
+        
         No_Buy_Orders += 1;
-  
+        
         for (int i = No_Buy_Orders; i>0; i--){
-
+            
             if (Buys[i-1].Price < Price || i == 1){
-   
+                
                 Buys[i].Price      = Price;
                 Buys[i].Amount     = Amount;
-                Buys[i].Address    = msg.sender;
+                Buys[i].Address    = msg_sender;
                 
                 Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + i; // Added Buy Order
                 
@@ -437,8 +446,8 @@ contract SyntheticTrader {
                 
                 if (Own_Amount[msg.sender] < 0){
                 
-                    Own_Funds[msg.sender]    += Own_Security[msg.sender] * min(Sells[i].Amount * sU / (-Own_Amount[msg.sender]), sU) / sU;
-                    Own_Security[msg.sender] -= Own_Security[msg.sender] * min(Sells[i].Amount * sU / (-Own_Amount[msg.sender]), sU) / sU;
+                    Own_Amount_Sell_Order[msg.sender] -= Sells[i].Amount * Sells[i].Security * sU / (Sells[i].Price * Sells[i].Amount)
+                    Own_Funds[msg.sender]             += Sells[i].Security;
                 
                 }
                 
@@ -451,6 +460,7 @@ contract SyntheticTrader {
                 Sells[i].Price      = Sells[i+1].Price;
                 Sells[i].Amount     = Sells[i+1].Amount;
                 Sells[i].Address    = Sells[i+1].Address;
+                Sells[i].Security   = Sells[i+1].Security;
             }
         }
         

@@ -106,7 +106,7 @@ contract SyntheticTrader {
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
         
-        Own_FeedBack[msg_sender] = 12; // 12 = Buy_Order
+        Own_FeedBack[msg.sender] = 12; // 12 = Buy_Order
         
         while (Amount > 0 && Price > 0){
             if (Own_Funds[msg_sender] + Own_Security[msg_sender] > 0){
@@ -121,6 +121,7 @@ contract SyntheticTrader {
                         Create_Buy_Order(msg_sender);
                     } else {
                     // Margin Call
+                        Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 15; // 15 = Margin Call
                         Own_Funds[msg_sender]-=Amount * Price / sU;
                         Own_Funds[0000000000]+=Amount * Price / sU;
                         Own_Amount[msg_sender] =0;
@@ -167,6 +168,7 @@ contract SyntheticTrader {
             if (Own_Amount_Debt > 0 && Sells[No_Sell_Orders].Price > 0){
                 Margin = Own_Security[addr] * sU / Own_Amount_Debt;
                 if (Sells[No_Sell_Orders].Price > Margin * 9 / 10){
+                    Own_FeedBack[addr] = 15; // 15 = Margin Call
                     ' Caller gets some of the security for the call
                     Own_Funds[msg.sender] += Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;
                     Own_Security[addr]    -= Own_Security[addr] * max(sU - Sells[No_Sell_Orders].Price * sU / Margin, 0) / sU / 2;

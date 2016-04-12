@@ -17,6 +17,8 @@ contract SyntheticTrader {
     int public No_Buy_Orders;  // Max number of buy orders
     int public Amount;         // Amount of stock to be traded
     int public Price;          // Price of the stock to be traded
+    int public Ref_Price;      // Refrence price for sell order securety
+    int public Ref_Price_Block_No; // Change the reference price only every 100 bloks
 
     int public sU = 10**18;    // 1 Unit is 1/1e18 of a shear (sU = smallest Unit)
 
@@ -99,7 +101,7 @@ contract SyntheticTrader {
     function Buy_Order(int Amount_in_sU, int Price_in_Wei) { // New Buy order
         Amount = Amount_in_sU;
         Price  = Price_in_Wei;
-        Buy_Order_(msg.sender,0);
+        Buy_Order_(msg.sender,0); // 0 = no margin call
     }
     
     function Buy_Order_(address msg_sender, int Margin_Call) internal { // New Buy order
@@ -240,6 +242,7 @@ contract SyntheticTrader {
   
         Sell_from_List_send_Buyer(Sell_Amount + Pay_Amount);
         Sell_from_List_edit_List(Sell_Amount + Pay_Amount);
+        Set_Ref_Price(List_Price);
    }
    
     function Buy_from_List(address msg_sender) internal { //  internal 
@@ -292,6 +295,7 @@ contract SyntheticTrader {
         
         Buy_from_List_send_Seller(Transfer_Amount);
         Buy_from_List_edit_List(Transfer_Amount);
+        Set_Ref_Price(List_Price);
     }
   
     function Sell_from_List_send_Buyer(int Transfer_Amount) internal { // Internal
@@ -383,20 +387,22 @@ contract SyntheticTrader {
         
         int Security = 0;
         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
-        Amount = min(Amount, Own_Amount_Credit + Own_Funds[msg.sender] * sU / Price);
         
+        if (Own_Amount_Credit > 0) {
+            Transfer_Amount = min(Amount, Own_Amount_Credit);
+            Add_Sell_Order(Transfer_Amount, 0); // 0 = No Security
+            Amount = Amount - Transfer_Amount
+        }
         if (Amount > 0) {
-            if (Amount >= Own_Amount[msg.sender]){
+            Amount = min(Amount, Own_Funds[msg.sender] * sU / Ref_Price);
                 
-                Security = (Amount - Own_Amount_Credit) * Price / sU;
-                Own_Funds[msg.sender]    -= Security;
+            Security = Amount * Ref_Price / sU;
+            Own_Funds[msg.sender]    -= Security;
             
-            }
-        
             Own_Amount[msg.sender] -= Amount;
             Own_Amount_Sell_Order[msg.sender] += Amount;
         
-            Add_Sell_Order(Security);
+            Add_Sell_Order(Transfer_Amount, Security);
             
         }
         Amount = 0;
@@ -418,7 +424,7 @@ contract SyntheticTrader {
         Amount = 0;
     }
 
-    function Add_Sell_Order(int Security) internal { // internal
+    function Add_Sell_Order(int Transfer_Amount, int Security) internal { // internal
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 33; // 33 = Add_Sell_Order
         
@@ -429,7 +435,7 @@ contract SyntheticTrader {
             if (Sells[i-1].Price > Price || i == 1){
                 
                 Sells[i].Price      = Price;
-                Sells[i].Amount     = Amount;
+                Sells[i].Amount     = Transfer_Amount;
                 Sells[i].Address    = msg.sender;
                 Sells[i].Security   = Security;
                 
@@ -537,8 +543,16 @@ contract SyntheticTrader {
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 90; // 90 = exit
         Own_FeedBack[msg.sender] += flag;           // 91 canceled / 90 not canceled
     }
-        
-        
+    
+// ------------------------------------------------------------------------------
+// Reference Price
+// ------------------------------------------------------------------------------        
+    function Set_Ref_Price(int List_Price) internal {
+        if (List_Price > 0 && Ref_Price_Block_No + 100 > int(block.number)){
+            Ref_Price = (Ref_Price * 99 + List_Price) / 100;
+            Ref_Price_Block_No = int(block.number);
+        }
+    }    
 // ------------------------------------------------------------------------------
 // universal routines
 // ------------------------------------------------------------------------------

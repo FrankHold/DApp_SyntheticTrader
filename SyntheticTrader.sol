@@ -326,17 +326,18 @@ contract SyntheticTrader {
         
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 24; // 24 = Buy_from_List_send_Seller
         
-        if (Own_Security[List_msg_sender] == 0) {
+        if (Own_Security[List_msg_sender] == 0) {// Seller has no dept
             
             Own_Funds[List_msg_sender]    += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
             
-        } else {
+        } else {// Seller has dept
             
             Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Price * Transfer_Amount / sU;
-            Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Security * Transfer_Amount / Sells[No_Sell_Orders].Amount;
             
-            Own_Amount_Sell_Order[List_msg_sender] -= Transfer_Amount * Sells[No_Sell_Orders].Security * sU / (Sells[No_Sell_Orders].Price * Transfer_Amount);
-            
+            if (Sells[No_Sell_Orders].Security > 0){
+                Own_Security[List_msg_sender] += Sells[No_Sell_Orders].Security * Transfer_Amount / Sells[No_Sell_Orders].Amount;
+                Own_Amount_Sell_Order[List_msg_sender] -= Transfer_Amount;
+            }
         }
         
     }  

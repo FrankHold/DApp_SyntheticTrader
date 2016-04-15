@@ -387,12 +387,13 @@ contract SyntheticTrader {
         Own_FeedBack[msg.sender] = Own_FeedBack[msg.sender] * 100 + 31; // 31 = Create_Sell_Order
         
         int Security = 0;
+        int Transfer_Amount = 0;
         int Own_Amount_Credit = max(Own_Amount[msg.sender],0);
         
         if (Own_Amount_Credit > 0) {
             Transfer_Amount = min(Amount, Own_Amount_Credit);
             Add_Sell_Order(Transfer_Amount, 0); // 0 = No Security
-            Amount = Amount - Transfer_Amount
+            Amount = Amount - Transfer_Amount;
         }
         if (Amount > 0) {
             Amount = min(Amount, Own_Funds[msg.sender] * sU / Ref_Price);
